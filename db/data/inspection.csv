@@ -1,0 +1,6 @@
+ID,equipment_ID,inspector_ID,inspectionDate,completionDate,status,notes,findings,safetyIssues,nextInspectionDate
+5f5f1111-6666-7777-8888-999999999fff,8f8f1234-5678-9abc-def0-123456789abc,1a1a1111-2222-3333-4444-555555555aaa,2025-11-15,2025-11-15,Completed,Routine quarterly inspection,All components within normal parameters,None,2026-02-15
+6g6g2222-7777-8888-9999-aaaaaaaaaagg,8f8f2345-6789-abcd-ef01-234567890abc,2b2b2222-3333-4444-5555-666666666bbb,2025-10-20,2025-10-21,Completed,Post-maintenance inspection,Calibration verified. Performance optimal,Minor wear on cutting head,2026-01-15
+7h7h3333-8888-9999-aaaa-bbbbbbbbbbhh,8f8f3456-789a-bcde-f012-345678901abc,3c3c3333-4444-5555-6666-777777777ccc,2025-09-10,2025-09-11,Completed,Pre-operational check,All safety interlocks functional,None,2025-12-10
+8i8i4444-9999-aaaa-bbbb-ccccccccccii,8f8f4567-89ab-cdef-0123-456789012abc,4d4d4444-5555-6666-7777-888888888ddd,2025-11-01,2025-11-01,Completed,Preventive maintenance inspection,Oil level low. Service required,Pressure valve showing early signs of wear,2026-02-01
+9j9j5555-aaaa-bbbb-cccc-ddddddddddj,8f8f5678-9abc-def0-1234-567890123abc,5e5e5555-6666-7777-8888-999999999eee,2025-11-20,2025-11-20,InProgress,Load testing in progress,Testing specifications and load capacity,None,2025-12-20

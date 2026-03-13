@@ -1,0 +1,6 @@
+ID,name,type,location,serialNumber,manufacturer,installationDate,status
+8f8f1234-5678-9abc-def0-123456789abc,Hydraulic Press A1,Hydraulic Press,Building A - Floor 1,HYD-2019-0001,Hydraulic Systems Inc,2019-03-15,Active
+8f8f2345-6789-abcd-ef01-234567890abc,CNC Machine B2,CNC Machine,Building B - Floor 2,CNC-2020-0002,Precision Engineering Ltd,2020-06-20,Active
+8f8f3456-789a-bcde-f012-345678901abc,Welding Robot C3,Welding Robot,Building A - Floor 3,WLD-2021-0003,Robotic Solutions GmbH,2021-01-10,Active
+8f8f4567-89ab-cdef-0123-456789012abc,Compressor Unit D4,Air Compressor,Building C - Basement,AIC-2018-0004,Pneumatic Systems Corp,2018-11-05,Maintenance
+8f8f5678-9abc-def0-1234-567890123abc,Power Generator E5,Generator,Building D - Exterior,GEN-2022-0005,Power Tech Solutions,2022-02-28,Active
