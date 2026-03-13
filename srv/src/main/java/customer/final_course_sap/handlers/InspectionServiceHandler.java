@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import cds.gen.inspectionservice.*;
 import customer.final_course_sap.report.PdfReportGenerator;
 import com.sap.cds.ql.Select;
-import com.sap.cds.ql.Predicates;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -49,7 +48,7 @@ public class InspectionServiceHandler {
 
     try {
       // Build query based on provided filters
-      Select<Inspection> query = Select.from(Inspection_.class);
+      Select<?> query = Select.from(Inspection_.class);
 
       List<Inspection> inspections = persistenceService.run(query).listOf(Inspection.class);
 
@@ -69,7 +68,7 @@ public class InspectionServiceHandler {
 
     } catch (Exception e) {
       logger.error("Error searching inspections", e);
-      throw ServiceException.internalServerError("Failed to search inspections: " + e.getMessage());
+      throw new ServiceException("Failed to search inspections: " + e.getMessage());
     }
   }
 
@@ -93,7 +92,7 @@ public class InspectionServiceHandler {
 
       if (!inspection.isPresent()) {
         logger.warn("Inspection not found: {}", inspectionId);
-        throw ServiceException.notFound("Inspection not found: " + inspectionId);
+        throw new ServiceException("Inspection not found: " + inspectionId);
       }
 
       Inspection insp = inspection.get();
@@ -143,7 +142,7 @@ public class InspectionServiceHandler {
 
       logger.info("Report generated successfully for inspection: {}", inspectionId);
 
-      ReportGenerationResponse response = new ReportGenerationResponse();
+      ReportGenerationResponse response = ReportGenerationResponse.create();
       response.setReportId(report.getId());
       response.setPdfUrl("/api/reports/export/" + report.getId());
       response.setMessage("Report generated successfully");
@@ -152,7 +151,7 @@ public class InspectionServiceHandler {
 
     } catch (Exception e) {
       logger.error("Error generating report for inspection: " + inspectionId, e);
-      throw ServiceException.internalServerError("Failed to generate report: " + e.getMessage());
+      throw new ServiceException("Failed to generate report: " + e.getMessage());
     }
   }
 
@@ -172,14 +171,14 @@ public class InspectionServiceHandler {
           .first(InspectionReport.class);
 
       if (!report.isPresent()) {
-        throw ServiceException.notFound("Report not found: " + reportId);
+        throw new ServiceException("Report not found: " + reportId);
       }
 
       return report.get().getReportPdf();
 
     } catch (Exception e) {
       logger.error("Error exporting report PDF: " + reportId, e);
-      throw ServiceException.internalServerError("Failed to export PDF: " + e.getMessage());
+      throw new ServiceException("Failed to export PDF: " + e.getMessage());
     }
   }
 
@@ -199,7 +198,7 @@ public class InspectionServiceHandler {
           .first(Inspection.class);
 
       if (!inspection.isPresent()) {
-        throw ServiceException.notFound("Inspection not found: " + inspectionId);
+        throw new ServiceException("Inspection not found: " + inspectionId);
       }
 
       Inspection insp = inspection.get();
@@ -207,13 +206,13 @@ public class InspectionServiceHandler {
       // Get equipment details
       Optional<Equipment> equipment = persistenceService.run(
           Select.from(Equipment_.class)
-              .where(e -> e.ID().eq(insp.getEquipmentID())))
+              .where(e -> e.ID().eq(insp.getEquipmentId())))
           .first(Equipment.class);
 
       // Get inspector details
       Optional<Inspector> inspector = persistenceService.run(
           Select.from(Inspector_.class)
-              .where(i -> i.ID().eq(insp.getInspectorID())))
+              .where(i -> i.ID().eq(insp.getInspectorId())))
           .first(Inspector.class);
 
       // Build response
@@ -236,7 +235,7 @@ public class InspectionServiceHandler {
 
     } catch (Exception e) {
       logger.error("Error retrieving inspection details: " + inspectionId, e);
-      throw ServiceException.internalServerError("Failed to retrieve details: " + e.getMessage());
+      throw new ServiceException("Failed to retrieve details: " + e.getMessage());
     }
   }
 
@@ -289,8 +288,8 @@ public class InspectionServiceHandler {
   }
 
   private InspectionSearchResult toSearchResult(Inspection inspection) {
-    InspectionSearchResult result = new InspectionSearchResult();
-    result.setID(inspection.getId());
+    InspectionSearchResult result = InspectionSearchResult.create();
+    result.setId(inspection.getId());
     result.setInspectionDate(inspection.getInspectionDate());
     result.setStatus(inspection.getStatus());
     result.setFindings(inspection.getFindings());

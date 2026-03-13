@@ -36,8 +36,8 @@ public class InspectionController {
   public ResponseEntity<?> getAllInspections() {
     try {
       logger.info("Fetching all inspections");
-      List<InspectionItems> inspections = persistenceService.run(
-          Select.from(Inspection_.class)).listOf(InspectionItems.class);
+      List<Inspection> inspections = persistenceService.run(
+          Select.from(Inspection_.class)).listOf(Inspection.class);
 
       return ResponseEntity.ok(inspections);
     } catch (Exception e) {
@@ -53,10 +53,10 @@ public class InspectionController {
   public ResponseEntity<?> getInspectionById(@PathVariable String id) {
     try {
       logger.info("Fetching inspection: {}", id);
-      Optional<InspectionItems> inspection = persistenceService.run(
+      Optional<Inspection> inspection = persistenceService.run(
           Select.from(Inspection_.class)
               .where(i -> i.ID().eq(id)))
-          .first(InspectionItems.class);
+          .first(Inspection.class);
 
       if (inspection.isPresent()) {
         return ResponseEntity.ok(inspection.get());
@@ -76,8 +76,8 @@ public class InspectionController {
   public ResponseEntity<?> getAllEquipment() {
     try {
       logger.info("Fetching all equipment");
-      List<EquipmentItems> equipment = persistenceService.run(
-          Select.from(Equipment_.class)).listOf(EquipmentItems.class);
+      List<Equipment> equipment = persistenceService.run(
+          Select.from(Equipment_.class)).listOf(Equipment.class);
 
       return ResponseEntity.ok(equipment);
     } catch (Exception e) {
@@ -93,8 +93,8 @@ public class InspectionController {
   public ResponseEntity<?> getAllInspectors() {
     try {
       logger.info("Fetching all inspectors");
-      List<InspectorItems> inspectors = persistenceService.run(
-          Select.from(Inspector_.class)).listOf(InspectorItems.class);
+      List<Inspector> inspectors = persistenceService.run(
+          Select.from(Inspector_.class)).listOf(Inspector.class);
 
       return ResponseEntity.ok(inspectors);
     } catch (Exception e) {
@@ -108,41 +108,41 @@ public class InspectionController {
    */
   @PostMapping("/reports/generate")
   public ResponseEntity<?> generateReport(
-      @RequestParam String inspectionId,
-      @RequestParam(required = false) String additionalComments) {
+      @RequestParam("inspectionId") String inspectionId,
+      @RequestParam(value = "additionalComments", required = false) String additionalComments) {
     try {
       logger.info("Generating report for inspection: {}", inspectionId);
 
       // Retrieve inspection with details
-      Optional<InspectionItems> inspection = persistenceService.run(
+      Optional<Inspection> inspection = persistenceService.run(
           Select.from(Inspection_.class)
               .where(i -> i.ID().eq(inspectionId)))
-          .first(InspectionItems.class);
+          .first(Inspection.class);
 
       if (!inspection.isPresent()) {
         return ResponseEntity.notFound().build();
       }
 
-      InspectionItems insp = inspection.get();
+      Inspection insp = inspection.get();
 
       // Get equipment details
-      Optional<EquipmentItems> equipment = persistenceService.run(
+      Optional<Equipment> equipment = persistenceService.run(
           Select.from(Equipment_.class)
-              .where(e -> e.ID().eq(insp.getEquipmentID())))
-          .first(EquipmentItems.class);
+              .where(e -> e.ID().eq(insp.getEquipmentId())))
+          .first(Equipment.class);
 
       // Get inspector details
-      Optional<InspectorItems> inspector = persistenceService.run(
+      Optional<Inspector> inspector = persistenceService.run(
           Select.from(Inspector_.class)
-              .where(i -> i.ID().eq(insp.getInspectorID())))
-          .first(InspectorItems.class);
+              .where(i -> i.ID().eq(insp.getInspectorId())))
+          .first(Inspector.class);
 
       // Create response
       Map<String, Object> response = new LinkedHashMap<>();
       response.put("inspectionId", inspectionId);
       response.put("message", "Report generation initiated");
-      response.put("equipment", equipment.map(EquipmentItems::getName).orElse("N/A"));
-      response.put("inspector", inspector.map(InspectorItems::getName).orElse("N/A"));
+      response.put("equipment", equipment.map(Equipment::getName).orElse("N/A"));
+      response.put("inspector", inspector.map(Inspector::getName).orElse("N/A"));
       response.put("status", insp.getStatus());
 
       return ResponseEntity.ok(response);
@@ -161,10 +161,10 @@ public class InspectionController {
     try {
       logger.info("Exporting report as PDF: {}", reportId);
 
-      Optional<InspectionReportItems> report = persistenceService.run(
+      Optional<InspectionReport> report = persistenceService.run(
           Select.from(InspectionReport_.class)
               .where(r -> r.ID().eq(reportId)))
-          .first(InspectionReportItems.class);
+          .first(InspectionReport.class);
 
       if (!report.isPresent()) {
         return ResponseEntity.notFound().build();
@@ -193,19 +193,19 @@ public class InspectionController {
    */
   @GetMapping("/search")
   public ResponseEntity<?> searchInspections(
-      @RequestParam(required = false) String equipmentId,
-      @RequestParam(required = false) String inspectorId,
-      @RequestParam(required = false) String status) {
+      @RequestParam(value = "equipmentId", required = false) String equipmentId,
+      @RequestParam(value = "inspectorId", required = false) String inspectorId,
+      @RequestParam(value = "status", required = false) String status) {
     try {
       logger.info("Searching inspections - Equipment: {}, Inspector: {}, Status: {}",
           equipmentId, inspectorId, status);
 
-      List<InspectionItems> inspections = persistenceService.run(
-          Select.from(Inspection_.class)).listOf(InspectionItems.class);
+      List<Inspection> inspections = persistenceService.run(
+          Select.from(Inspection_.class)).listOf(Inspection.class);
 
-      List<InspectionItems> filtered = inspections.stream()
-          .filter(i -> equipmentId == null || equipmentId.isEmpty() || equipmentId.equals(i.getEquipmentID()))
-          .filter(i -> inspectorId == null || inspectorId.isEmpty() || inspectorId.equals(i.getInspectorID()))
+      List<Inspection> filtered = inspections.stream()
+          .filter(i -> equipmentId == null || equipmentId.isEmpty() || equipmentId.equals(i.getEquipmentId()))
+          .filter(i -> inspectorId == null || inspectorId.isEmpty() || inspectorId.equals(i.getInspectorId()))
           .filter(i -> status == null || status.isEmpty() || status.equals(i.getStatus()))
           .collect(Collectors.toList());
 

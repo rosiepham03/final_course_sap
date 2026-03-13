@@ -1,0 +1,22 @@
+{
+  "name": "equipment-inspection-frontend",
+  "version": "1.0.0",
+  "description": "Equipment Inspection Report System - Frontend Application",
+  "scripts": {
+    "serve": "python -m http.server 3000 || npx http-server -p 3000",
+    "dev": "npx http-server . -p 3000 -g",
+    "build": "echo 'Frontend is a static SPA - no build needed'",
+    "start": "npm run dev"
+  },
+  "keywords": [
+    "equipment-inspection",
+    "vue",
+    "dashboard",
+    "reporting"
+  ],
+  "author": "Equipment Inspection Team",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.0"
+  }
+}

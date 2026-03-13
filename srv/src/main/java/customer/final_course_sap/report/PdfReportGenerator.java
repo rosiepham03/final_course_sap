@@ -10,6 +10,7 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.io.font.constants.StandardFonts;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -68,8 +69,8 @@ public class PdfReportGenerator {
       Document document = new Document(pdfDoc);
 
       // Set font
-      PdfFont boldFont = PdfFontFactory.createFont(null, "Courier", true);
-      PdfFont regularFont = PdfFontFactory.createFont(null, "Courier", false);
+      PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.COURIER_BOLD);
+      PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.COURIER);
 
       // Title
       Paragraph title = new Paragraph("EQUIPMENT INSPECTION REPORT")

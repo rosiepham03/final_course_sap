@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Inspection Report System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <i class="bi bi-clipboard-check"></i> Equipment Inspection System
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'dashboard'">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'inspections'">Inspections</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'equipment'">Equipment</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'inspectors'">Inspectors</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'newInspection'">New Inspection</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container-fluid mt-4">
+            <!-- Dashboard Page -->
+            <div v-if="currentPage === 'dashboard'" class="dashboard-page">
+                <h1 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard</h1>
+                
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.totalInspections }}</div>
+                            <div class="stat-label">Total Inspections</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.totalEquipment }}</div>
+                            <div class="stat-label">Equipment Registered</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.totalInspectors }}</div>
+                            <div class="stat-label">Inspectors</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.pendingReports }}</div>
+                            <div class="stat-label">Pending Reports</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-graph-up"></i> Recent Inspections
+                            </div>
+                            <div class="card-body">
+                                <div v-if="recentInspections.length > 0" class="inspection-list">
+                                    <div v-for="inspection in recentInspections.slice(0, 5)" :key="inspection.ID" class="inspection-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ inspection.status }}</strong>
+                                                <small class="d-block text-muted">{{ formatDate(inspection.inspectionDate) }}</small>
+                                            </div>
+                                            <span v-if="inspection.status === 'COMPLETED'" class="badge bg-success">Completed</span>
+                                            <span v-else class="badge bg-warning">Pending</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="text-muted text-center py-3">No recent inspections</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-tools"></i> System Status
+                            </div>
+                            <div class="card-body">
+                                <div class="status-item">
+                                    <i class="bi bi-server text-success"></i> Backend API: <strong>Connected</strong>
+                                </div>
+                                <div class="status-item">
+                                    <i class="bi bi-database text-success"></i> Database: <strong>Online</strong>
+                                </div>
+                                <div class="status-item">
+                                    <i class="bi bi-gear text-success"></i> Services: <strong>Running</strong>
+                                </div>
+                                <hr>
+                                <small class="text-muted">Last updated: {{ new Date().toLocaleString() }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspections Page -->
+            <div v-if="currentPage === 'inspections'" class="inspections-page">
+                <h1 class="mb-4"><i class="bi bi-list-check"></i> Inspections</h1>
+                
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <input v-model="filters.equipmentName" type="text" class="form-control" placeholder="Search equipment...">
+                            </div>
+                            <div class="col-md-4">
+                                <select v-model="filters.status" class="form-select">
+                                    <option value="">All Status</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="COMPLETED">Completed</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary w-100" @click="searchInspections">
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Equipment</th>
+                                <th>Inspector</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Findings</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="inspection in inspections" :key="inspection.ID">
+                                <td><small>{{ inspection.ID }}</small></td>
+                                <td>{{ inspection.equipmentName || '-' }}</td>
+                                <td>{{ inspection.inspectorName || '-' }}</td>
+                                <td>{{ formatDate(inspection.inspectionDate) }}</td>
+                                <td>
+                                    <span v-if="inspection.status === 'COMPLETED'" class="badge bg-success">Completed</span>
+                                    <span v-else class="badge bg-warning">{{ inspection.status }}</span>
+                                </td>
+                                <td>{{ inspection.findings ? inspection.findings.substring(0, 30) + '...' : '-' }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" @click="viewInspectionDetails(inspection.ID)" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" @click="deleteInspection(inspection.ID)" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div v-if="inspections.length === 0" class="text-muted text-center py-3">No inspections found</div>
+            </div>
+
+            <!-- Equipment Page -->
+            <div v-if="currentPage === 'equipment'" class="equipment-page">
+                <h1 class="mb-4"><i class="bi bi-tools"></i> Equipment</h1>
+                
+                <div class="row">
+                    <div v-for="eq in equipment" :key="eq.ID" class="col-md-6 col-lg-4 mb-3">
+                        <div class="card equipment-card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ eq.name }}</h5>
+                                <p class="card-text">
+                                    <small>
+                                        <strong>Type:</strong> {{ eq.type }}<br>
+                                        <strong>Location:</strong> {{ eq.location }}<br>
+                                        <strong>Serial:</strong> {{ eq.serialNumber }}<br>
+                                        <strong>Status:</strong> 
+                                        <span v-if="eq.status === 'ACTIVE'" class="badge bg-success">Active</span>
+                                        <span v-else class="badge bg-secondary">{{ eq.status }}</span>
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="equipment.length === 0" class="col-12">
+                        <div class="text-muted text-center py-5">No equipment found</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspectors Page -->
+            <div v-if="currentPage === 'inspectors'" class="inspectors-page">
+                <h1 class="mb-4"><i class="bi bi-person-check"></i> Inspectors</h1>
+                
+                <div class="row">
+                    <div v-for="inspector in inspectors" :key="inspector.ID" class="col-md-4 mb-3">
+                        <div class="card inspector-card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ inspector.name }}</h5>
+                                <p class="card-text">
+                                    <small>
+                                        <strong>Employee ID:</strong> {{ inspector.employeeId }}<br>
+                                        <strong>Department:</strong> {{ inspector.department }}<br>
+                                        <strong>Email:</strong> {{ inspector.email }}<br>
+                                        <strong>Certifications:</strong> {{ inspector.certifications || 'N/A' }}
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="inspectors.length === 0" class="col-12">
+                        <div class="text-muted text-center py-5">No inspectors found</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Inspection Page -->
+            <div v-if="currentPage === 'newInspection'" class="new-inspection-page">
+                <h1 class="mb-4"><i class="bi bi-plus-circle"></i> New Inspection</h1>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <form @submit.prevent="submitInspection">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Equipment *</label>
+                                    <select v-model="newInspection.equipmentId" class="form-select" required>
+                                        <option value="">Select Equipment</option>
+                                        <option v-for="eq in equipment" :key="eq.ID" :value="eq.ID">{{ eq.name }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Inspector *</label>
+                                    <select v-model="newInspection.inspectorId" class="form-select" required>
+                                        <option value="">Select Inspector</option>
+                                        <option v-for="insp in inspectors" :key="insp.ID" :value="insp.ID">{{ insp.name }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Inspection Date *</label>
+                                    <input v-model="newInspection.inspectionDate" type="date" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Completion Date</label>
+                                    <input v-model="newInspection.completionDate" type="date" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Status *</label>
+                                <select v-model="newInspection.status" class="form-select" required>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="IN_PROGRESS">In Progress</option>
+                                    <option value="COMPLETED">Completed</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Findings</label>
+                                <textarea v-model="newInspection.findings" class="form-control" rows="3" placeholder="Describe inspection findings..."></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Safety Issues</label>
+                                <textarea v-model="newInspection.safetyIssues" class="form-control" rows="2" placeholder="List any safety issues found..."></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                <textarea v-model="newInspection.notes" class="form-control" rows="2" placeholder="Additional notes..."></textarea>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="button" class="btn btn-secondary" @click="currentPage = 'inspections'">Cancel</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Create Inspection
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div v-if="alert.show" class="alert-container" :class="'alert-' + alert.type">
+            <div class="alert" :class="'alert-' + alert.type">
+                {{ alert.message }}
+                <button type="button" class="btn-close" @click="alert.show = false"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
