@@ -118,19 +118,36 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <input v-model="filters.equipmentName" type="text" class="form-control" placeholder="Search equipment...">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <select v-model="filters.inspectorId" class="form-select">
+                                    <option value="">All Inspectors</option>
+                                    <option v-for="insp in inspectors" :key="insp.ID" :value="insp.ID">
+                                        {{ insp.name }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <span class="input-group-text">From</span>
+                                    <input v-model="filters.dateFrom" type="date" class="form-control">
+                                    <span class="input-group-text">To</span>
+                                    <input v-model="filters.dateTo" type="date" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
                                 <select v-model="filters.status" class="form-select">
                                     <option value="">All Status</option>
                                     <option value="PENDING">Pending</option>
+                                    <option value="IN_PROGRESS">In Progress</option>
                                     <option value="COMPLETED">Completed</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-primary w-100" @click="searchInspections">
-                                    <i class="bi bi-search"></i> Search
+                            <div class="col-md-1 d-grid">
+                                <button class="btn btn-primary" @click="searchInspections">
+                                    <i class="bi bi-search"></i>
                                 </button>
                             </div>
                         </div>

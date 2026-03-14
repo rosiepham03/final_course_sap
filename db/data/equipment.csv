@@ -4,3 +4,6 @@ ID,name,type,location,serialNumber,manufacturer,installationDate,status
 8f8f3456-789a-bcde-f012-345678901abc,Welding Robot C3,Welding Robot,Building A - Floor 3,WLD-2021-0003,Robotic Solutions GmbH,2021-01-10,Active
 8f8f4567-89ab-cdef-0123-456789012abc,Compressor Unit D4,Air Compressor,Building C - Basement,AIC-2018-0004,Pneumatic Systems Corp,2018-11-05,Maintenance
 8f8f5678-9abc-def0-1234-567890123abc,Power Generator E5,Generator,Building D - Exterior,GEN-2022-0005,Power Tech Solutions,2022-02-28,Active
+9a9a6789-abcd-ef01-2345-678901234f9a,Overhead Crane F6,Overhead Crane,Building A - Bay 2,CRN-2017-0006,Lifting Systems Co,2017-07-12,Active
+abAB7890-bcde-f012-3456-789012345abc,Conveyor Line G7,Conveyor,Building B - Line 1,CNV-2016-0007,Material Flow Inc,2016-04-03,Inactive
+bcBC8901-cdef-0123-4567-890123456bcd,Boiler Unit H8,Industrial Boiler,Utility Room U1,BLR-2015-0008,HeatWorks Ltd,2015-09-25,Active

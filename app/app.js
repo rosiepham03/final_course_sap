@@ -23,6 +23,9 @@ const app = createApp({
             // Filters
             filters: {
                 equipmentName: '',
+                inspectorId: '',
+                dateFrom: '',
+                dateTo: '',
                 status: ''
             },
             
@@ -110,6 +113,9 @@ const app = createApp({
             try {
                 const params = {};
                 if (this.filters.equipmentName) params.equipmentName = this.filters.equipmentName;
+                if (this.filters.inspectorId) params.inspectorId = this.filters.inspectorId;
+                if (this.filters.dateFrom) params.dateFrom = this.filters.dateFrom;
+                if (this.filters.dateTo) params.dateTo = this.filters.dateTo;
                 if (this.filters.status) params.status = this.filters.status;
                 
                 const response = await axios.get(`${this.apiUrl}/search`, { params });

@@ -1,6 +1,9 @@
 ID,name,employeeId,department,email,certifications
-1a1a1111-2222-3333-4444-555555555aaa,John Smith,EMP001,Manufacturing,john.smith@company.com,ISO9001,OHSAS18001
-2b2b2222-3333-4444-5555-666666666bbb,Sarah Johnson,EMP002,Quality Assurance,sarah.johnson@company.com,ISO9001,SQF
-3c3c3333-4444-5555-6666-777777777ccc,Michael Brown,EMP003,Maintenance,michael.brown@company.com,OHSAS18001,ISO14001
-4d4d4444-5555-6666-7777-888888888ddd,Emily Davis,EMP004,Safety,emily.davis@company.com,ISO45001,UMCG
-5e5e5555-6666-7777-8888-999999999eee,Robert Wilson,EMP005,Manufacturing,robert.wilson@company.com,ISO9001,OHSAS18001
+1a1a1111-2222-3333-4444-555555555aaa,John Smith,EMP001,Manufacturing,john.smith@company.com,"ISO9001;OHSAS18001"
+2b2b2222-3333-4444-5555-666666666bbb,Sarah Johnson,EMP002,Quality Assurance,sarah.johnson@company.com,"ISO9001;SQF"
+3c3c3333-4444-5555-6666-777777777ccc,Michael Brown,EMP003,Maintenance,michael.brown@company.com,"OHSAS18001;ISO14001"
+4d4d4444-5555-6666-7777-888888888ddd,Emily Davis,EMP004,Safety,emily.davis@company.com,"ISO45001;UMCG"
+5e5e5555-6666-7777-8888-999999999eee,Robert Wilson,EMP005,Manufacturing,robert.wilson@company.com,"ISO9001;OHSAS18001"
+6f6f6666-7777-8888-9999-000000000fff,Linda Martinez,EMP006,Quality Assurance,linda.martinez@company.com,"ISO9001;HACCP"
+7g7g7777-8888-9999-0000-111111111ggg,David Lee,EMP007,Maintenance,david.lee@company.com,"OHSAS18001;ISO50001"
+8h8h8888-9999-0000-1111-222222222hhh,Anna Kim,EMP008,Operations,anna.kim@company.com,"ISO9001;ISO14001"

@@ -10,10 +10,12 @@ import org.slf4j.LoggerFactory;
 import com.sap.cds.services.persistence.PersistenceService;
 import cds.gen.inspectionservice.*;
 import com.sap.cds.ql.Select;
+import com.sap.cds.ql.Delete;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.time.LocalDate;
 
 /**
  * REST Controller for Equipment Inspection Reports
@@ -39,7 +41,11 @@ public class InspectionController {
       List<Inspection> inspections = persistenceService.run(
           Select.from(Inspection_.class)).listOf(Inspection.class);
 
-      return ResponseEntity.ok(inspections);
+      List<Map<String, Object>> result = inspections.stream()
+          .map(this::toInspectionView)
+          .collect(Collectors.toList());
+
+      return ResponseEntity.ok(result);
     } catch (Exception e) {
       logger.error("Error fetching inspections", e);
       return ResponseEntity.status(500).body("Error: " + e.getMessage());
@@ -50,7 +56,7 @@ public class InspectionController {
    * GET /api/inspections/{id} - Get inspection by ID
    */
   @GetMapping("/inspections/{id}")
-  public ResponseEntity<?> getInspectionById(@PathVariable String id) {
+  public ResponseEntity<?> getInspectionById(@PathVariable("id") String id) {
     try {
       logger.info("Fetching inspection: {}", id);
       Optional<Inspection> inspection = persistenceService.run(
@@ -65,6 +71,26 @@ public class InspectionController {
       }
     } catch (Exception e) {
       logger.error("Error fetching inspection: {}", id, e);
+      return ResponseEntity.status(500).body("Error: " + e.getMessage());
+    }
+  }
+
+  /**
+   * DELETE /api/inspections/{id} - Delete inspection by ID
+   */
+  @DeleteMapping("/inspections/{id}")
+  public ResponseEntity<?> deleteInspection(@PathVariable("id") String id) {
+    try {
+      logger.info("Deleting inspection: {}", id);
+
+      persistenceService.run(
+          Delete.from(Inspection_.class)
+              .where(i -> i.ID().eq(id)));
+
+      return ResponseEntity.noContent().build();
+
+    } catch (Exception e) {
+      logger.error("Error deleting inspection: {}", id, e);
       return ResponseEntity.status(500).body("Error: " + e.getMessage());
     }
   }
@@ -108,42 +134,59 @@ public class InspectionController {
    */
   @PostMapping("/reports/generate")
   public ResponseEntity<?> generateReport(
-      @RequestParam("inspectionId") String inspectionId,
-      @RequestParam(value = "additionalComments", required = false) String additionalComments) {
+      @RequestBody Map<String, Object> request) {
     try {
+      String inspectionId = (String) request.getOrDefault("inspectionId",
+          "INS-" + System.currentTimeMillis());
+      String equipmentId = (String) request.get("equipmentId");
+      String inspectorId = (String) request.get("inspectorId");
+      String inspectionDateStr = (String) request.get("inspectionDate");
+      String completionDateStr = (String) request.get("completionDate");
+      String status = (String) request.getOrDefault("status", "PENDING");
+      String findings = (String) request.get("findings");
+      String safetyIssues = (String) request.get("safetyIssues");
+      String notes = (String) request.get("notes");
+
       logger.info("Generating report for inspection: {}", inspectionId);
 
-      // Retrieve inspection with details
-      Optional<Inspection> inspection = persistenceService.run(
-          Select.from(Inspection_.class)
-              .where(i -> i.ID().eq(inspectionId)))
-          .first(Inspection.class);
+      // Create new inspection record
+      Map<String, Object> data = new LinkedHashMap<>();
+      data.put("ID", inspectionId);
+      data.put("equipment_ID", equipmentId);
+      data.put("inspector_ID", inspectorId);
 
-      if (!inspection.isPresent()) {
-        return ResponseEntity.notFound().build();
+      if (inspectionDateStr != null && !inspectionDateStr.isEmpty()) {
+        data.put("inspectionDate", LocalDate.parse(inspectionDateStr));
+      }
+      if (completionDateStr != null && !completionDateStr.isEmpty()) {
+        data.put("completionDate", LocalDate.parse(completionDateStr));
       }
 
-      Inspection insp = inspection.get();
+      data.put("status", status);
+      data.put("findings", findings);
+      data.put("safetyIssues", safetyIssues);
+      data.put("notes", notes);
 
-      // Get equipment details
+      persistenceService.run(com.sap.cds.ql.Insert.into(Inspection_.class).entry(data));
+
+      // Load related data for response
       Optional<Equipment> equipment = persistenceService.run(
           Select.from(Equipment_.class)
-              .where(e -> e.ID().eq(insp.getEquipmentId())))
+              .where(e -> e.ID().eq(equipmentId)))
           .first(Equipment.class);
 
-      // Get inspector details
       Optional<Inspector> inspector = persistenceService.run(
           Select.from(Inspector_.class)
-              .where(i -> i.ID().eq(insp.getInspectorId())))
+              .where(i -> i.ID().eq(inspectorId)))
           .first(Inspector.class);
 
       // Create response
       Map<String, Object> response = new LinkedHashMap<>();
       response.put("inspectionId", inspectionId);
-      response.put("message", "Report generation initiated");
+      response.put("message", "Inspection created successfully");
       response.put("equipment", equipment.map(Equipment::getName).orElse("N/A"));
       response.put("inspector", inspector.map(Inspector::getName).orElse("N/A"));
-      response.put("status", insp.getStatus());
+      response.put("status", status);
 
       return ResponseEntity.ok(response);
 
@@ -157,7 +200,7 @@ public class InspectionController {
    * GET /api/reports/export/{reportId} - Export report as PDF
    */
   @GetMapping("/reports/export/{reportId}")
-  public ResponseEntity<?> exportReportPdf(@PathVariable String reportId) {
+  public ResponseEntity<?> exportReportPdf(@PathVariable("reportId") String reportId) {
     try {
       logger.info("Exporting report as PDF: {}", reportId);
 
@@ -193,20 +236,71 @@ public class InspectionController {
    */
   @GetMapping("/search")
   public ResponseEntity<?> searchInspections(
-      @RequestParam(value = "equipmentId", required = false) String equipmentId,
+      @RequestParam(value = "equipmentName", required = false) String equipmentName,
       @RequestParam(value = "inspectorId", required = false) String inspectorId,
+      @RequestParam(value = "dateFrom", required = false) String dateFrom,
+      @RequestParam(value = "dateTo", required = false) String dateTo,
       @RequestParam(value = "status", required = false) String status) {
     try {
       logger.info("Searching inspections - Equipment: {}, Inspector: {}, Status: {}",
-          equipmentId, inspectorId, status);
+          equipmentName, inspectorId, status);
 
       List<Inspection> inspections = persistenceService.run(
           Select.from(Inspection_.class)).listOf(Inspection.class);
 
-      List<Inspection> filtered = inspections.stream()
-          .filter(i -> equipmentId == null || equipmentId.isEmpty() || equipmentId.equals(i.getEquipmentId()))
-          .filter(i -> inspectorId == null || inspectorId.isEmpty() || inspectorId.equals(i.getInspectorId()))
-          .filter(i -> status == null || status.isEmpty() || status.equals(i.getStatus()))
+      List<Map<String, Object>> views = inspections.stream()
+          .map(this::toInspectionView)
+          .collect(Collectors.toList());
+
+      List<Map<String, Object>> filtered = views.stream()
+          // Filter by equipment name (contains, case-insensitive)
+          .filter(v -> {
+            if (equipmentName == null || equipmentName.isEmpty()) {
+              return true;
+            }
+            String eqName = (String) v.getOrDefault("equipmentName", "");
+            return eqName.toLowerCase().contains(equipmentName.toLowerCase());
+          })
+          // Filter by inspector
+          .filter(v -> {
+            if (inspectorId == null || inspectorId.isEmpty()) {
+              return true;
+            }
+            String inspId = (String) v.getOrDefault("inspectorId", "");
+            return inspectorId.equals(inspId);
+          })
+          // Filter by date range
+          .filter(v -> {
+            if ((dateFrom == null || dateFrom.isEmpty()) && (dateTo == null || dateTo.isEmpty())) {
+              return true;
+            }
+            Object dateObj = v.get("inspectionDate");
+            if (dateObj == null) {
+              return false;
+            }
+            LocalDate d = (LocalDate) dateObj;
+            if (dateFrom != null && !dateFrom.isEmpty()) {
+              LocalDate from = LocalDate.parse(dateFrom);
+              if (d.isBefore(from)) {
+                return false;
+              }
+            }
+            if (dateTo != null && !dateTo.isEmpty()) {
+              LocalDate to = LocalDate.parse(dateTo);
+              if (d.isAfter(to)) {
+                return false;
+              }
+            }
+            return true;
+          })
+          // Filter by status
+          .filter(v -> {
+            if (status == null || status.isEmpty()) {
+              return true;
+            }
+            String s = (String) v.getOrDefault("status", "");
+            return status.equalsIgnoreCase(s);
+          })
           .collect(Collectors.toList());
 
       return ResponseEntity.ok(filtered);
@@ -215,5 +309,36 @@ public class InspectionController {
       logger.error("Error searching inspections", e);
       return ResponseEntity.status(500).body("Error: " + e.getMessage());
     }
+  }
+
+  /**
+   * Build a view model for inspections with equipment/inspector names
+   */
+  private Map<String, Object> toInspectionView(Inspection insp) {
+    Map<String, Object> view = new LinkedHashMap<>();
+    view.put("ID", insp.getId());
+    view.put("inspectionDate", insp.getInspectionDate());
+    view.put("status", insp.getStatus());
+    view.put("findings", insp.getFindings());
+    view.put("inspectorId", insp.getInspectorId());
+
+    try {
+      Optional<Equipment> equipment = persistenceService.run(
+          Select.from(Equipment_.class)
+              .where(e -> e.ID().eq(insp.getEquipmentId())))
+          .first(Equipment.class);
+
+      Optional<Inspector> inspector = persistenceService.run(
+          Select.from(Inspector_.class)
+              .where(i -> i.ID().eq(insp.getInspectorId())))
+          .first(Inspector.class);
+
+      view.put("equipmentName", equipment.map(Equipment::getName).orElse(null));
+      view.put("inspectorName", inspector.map(Inspector::getName).orElse(null));
+    } catch (Exception e) {
+      logger.warn("Unable to enrich inspection {} with equipment/inspector data", insp.getId(), e);
+    }
+
+    return view;
   }
 }

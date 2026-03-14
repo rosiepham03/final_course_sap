@@ -293,7 +293,26 @@ public class InspectionServiceHandler {
     result.setInspectionDate(inspection.getInspectionDate());
     result.setStatus(inspection.getStatus());
     result.setFindings(inspection.getFindings());
-    // Equipment and Inspector names would need to be fetched separately
+
+    // Enrich with related Equipment and Inspector names for UI
+    try {
+      Optional<Equipment> equipment = persistenceService.run(
+          Select.from(Equipment_.class)
+              .where(e -> e.ID().eq(inspection.getEquipmentId())))
+          .first(Equipment.class);
+
+      Optional<Inspector> inspector = persistenceService.run(
+          Select.from(Inspector_.class)
+              .where(i -> i.ID().eq(inspection.getInspectorId())))
+          .first(Inspector.class);
+
+      result.setEquipmentName(equipment.map(Equipment::getName).orElse(null));
+      result.setEquipmentType(equipment.map(Equipment::getType).orElse(null));
+      result.setInspectorName(inspector.map(Inspector::getName).orElse(null));
+    } catch (Exception e) {
+      logger.warn("Unable to enrich search result with equipment/inspector data for inspection {}", inspection.getId(), e);
+    }
+
     return result;
   }
 }
