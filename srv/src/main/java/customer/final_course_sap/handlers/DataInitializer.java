@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,8 @@ public class DataInitializer {
 
   private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+  private final Map<String, String> equipmentIdMap = new HashMap<>();
+  private final Map<String, String> inspectorIdMap = new HashMap<>();
 
   private final PersistenceService persistenceService;
 
@@ -89,6 +92,13 @@ public class DataInitializer {
   }
 
   /**
+   * Validate UUID format (hex only: 0-9, a-f)
+   */
+  private boolean isValidUUID(String uuid) {
+    return uuid.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+  }
+
+  /**
    * Load equipment data from CSV
    */
   private void loadEquipmentData() throws Exception {
@@ -123,8 +133,12 @@ public class DataInitializer {
         }
 
         try {
+          String csvId = fields[0].trim();
+          String validUuid = isValidUUID(csvId) ? csvId : UUID.randomUUID().toString();
+          equipmentIdMap.put(csvId, validUuid);
+
           Map<String, Object> data = new HashMap<>();
-          data.put("ID", fields[0].trim());
+          data.put("ID", validUuid);
           data.put("name", fields[1].trim());
           data.put("type", fields[2].trim());
           data.put("location", fields[3].trim());
@@ -134,7 +148,7 @@ public class DataInitializer {
           try {
             data.put("installationDate", LocalDate.parse(fields[6].trim(), DATE_FORMATTER));
           } catch (Exception e) {
-            logger.warn("Invalid date for equipment {}: {}", fields[0], fields[6]);
+            logger.warn("Invalid date for equipment {}: {}", csvId, fields[6]);
           }
 
           data.put("status", fields[7].trim());
@@ -185,8 +199,12 @@ public class DataInitializer {
         }
 
         try {
+          String csvId = fields[0].trim();
+          String validUuid = isValidUUID(csvId) ? csvId : UUID.randomUUID().toString();
+          inspectorIdMap.put(csvId, validUuid);
+
           Map<String, Object> data = new HashMap<>();
-          data.put("ID", fields[0].trim());
+          data.put("ID", validUuid);
           data.put("name", fields[1].trim());
           data.put("employeeId", fields[2].trim());
           data.put("department", fields[3].trim());
@@ -239,21 +257,30 @@ public class DataInitializer {
         }
 
         try {
+          String csvId = fields[0].trim();
+          String validUuid = isValidUUID(csvId) ? csvId : UUID.randomUUID().toString();
+
+          String equipmentCsvId = fields[1].trim();
+          String equipmentId = equipmentIdMap.getOrDefault(equipmentCsvId, UUID.randomUUID().toString());
+
+          String inspectorCsvId = fields[2].trim();
+          String inspectorId = inspectorIdMap.getOrDefault(inspectorCsvId, UUID.randomUUID().toString());
+
           Map<String, Object> data = new HashMap<>();
-          data.put("ID", fields[0].trim());
-          data.put("equipment_ID", fields[1].trim());
-          data.put("inspector_ID", fields[2].trim());
+          data.put("ID", validUuid);
+          data.put("equipment_ID", equipmentId);
+          data.put("inspector_ID", inspectorId);
 
           try {
             data.put("inspectionDate", LocalDate.parse(fields[3].trim(), DATE_FORMATTER));
           } catch (Exception e) {
-            logger.warn("Invalid inspection date for inspection {}: {}", fields[0], fields[3]);
+            logger.warn("Invalid inspection date for inspection {}: {}", csvId, fields[3]);
           }
 
           try {
             data.put("completionDate", LocalDate.parse(fields[4].trim(), DATE_FORMATTER));
           } catch (Exception e) {
-            logger.warn("Invalid completion date for inspection {}: {}", fields[0], fields[4]);
+            logger.warn("Invalid completion date for inspection {}: {}", csvId, fields[4]);
           }
 
           data.put("status", fields[5].trim());
@@ -264,7 +291,7 @@ public class DataInitializer {
           try {
             data.put("nextInspectionDate", LocalDate.parse(fields[9].trim(), DATE_FORMATTER));
           } catch (Exception e) {
-            logger.warn("Invalid next inspection date for inspection {}: {}", fields[0], fields[9]);
+            logger.warn("Invalid next inspection date for inspection {}: {}", csvId, fields[9]);
           }
 
           persistenceService.run(Insert.into("equipment.inspection.Inspection").entry(data));

@@ -96,7 +96,10 @@ const app = createApp({
                 const response = await axios.get(`${this.apiUrl}/Inspection`);
                 // Handle OData response format
                 const data = response.data.value || response.data;
-                this.inspections = Array.isArray(data) ? data : [];
+                let inspections = Array.isArray(data) ? data : [];
+                // Filter out invalid UUIDs
+                inspections = inspections.filter(i => this.isValidUUID(i.ID));
+                this.inspections = inspections;
                 this.recentInspections = [...this.inspections].sort((a, b) => {
                     return new Date(b.inspectionDate) - new Date(a.inspectionDate);
                 });
@@ -193,7 +196,7 @@ const app = createApp({
                     this.showAlert('Invalid inspection ID format', 'danger');
                     return;
                 }
-                const response = await axios.get(`${this.apiUrl}/Inspection(ID='${inspectionId}')`);  
+                const response = await axios.get(`${this.apiUrl}/Inspection(ID=${inspectionId})`);  
                 console.log('Inspection details:', response.data);
                 this.showAlert('Details loaded (check console)', 'info');
             } catch (error) {
@@ -211,7 +214,7 @@ const app = createApp({
             }
             if (confirm('Are you sure you want to delete this inspection?')) {
                 try {
-                    await axios.delete(`${this.apiUrl}/Inspection(ID='${inspectionId}')`);  
+                    await axios.delete(`${this.apiUrl}/Inspection(ID=${inspectionId})`);  
                     this.showAlert('Inspection deleted', 'success');
                     await this.loadInspections();
                 } catch (error) {
