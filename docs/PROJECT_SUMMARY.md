@@ -95,15 +95,7 @@ equipment-inspection-cap/
 │       │       - Report generation
 │       │       - Data transformation
 │       │
-│       ├── controller/
-│       │   └── 📄 InspectionController.java  ⭐ REST endpoints
-│       │       - Equipment endpoints
-│       │       - Inspector endpoints
-│       │       - Inspection CRUD
-│       │       - Search functionality
-│       │       - Report generation
-│       │       - PDF export
-│       │
+
 │       └── report/
 │           └── 📄 PdfReportGenerator.java    ⭐ PDF generation
 │               - Professional report layout
@@ -158,11 +150,12 @@ equipment-inspection-cap/
 - Filter by date range
 - Combine multiple filters
 
-### 6. REST API
+### OData Service API (CDS Native)
+- Auto-generated OData V4 endpoints from CDS service definition
 - GET endpoints for data retrieval
-- POST endpoints for report generation
+- POST endpoints for custom function calls
 - Proper HTTP status codes and error handling
-- CORS support for frontend integration
+- CORS support for frontend integration (built into SAP CAP)
 
 ---
 
@@ -177,8 +170,8 @@ Inspector ────┘
 
 ### Service Stack
 ```
-REST Controller (InspectionController.java)
-        ↓ (routes requests)
+OData V4 Gateway (CDS Native)
+        ↓ (auto-generated from service definition)
 Service Handler (InspectionServiceHandler.java)
         ↓ (business logic)
 CDS Data Service

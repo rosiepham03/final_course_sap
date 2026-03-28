@@ -1,34 +1,38 @@
 package customer.final_course_sap.handlers;
 
+import com.sap.cds.ql.Insert;
+import com.sap.cds.ql.Select;
+import com.sap.cds.ql.Update;
+import com.sap.cds.ql.cqn.CqnSelect;
 import com.sap.cds.services.ServiceException;
-import com.sap.cds.services.cds.CdsCreateEventContext;
-import com.sap.cds.services.cds.CdsReadEventContext;
-import com.sap.cds.services.cds.CdsUpdateEventContext;
-import com.sap.cds.services.handler.annotations.After;
-import com.sap.cds.services.handler.annotations.Before;
-import com.sap.cds.services.handler.annotations.HandlerOrder;
+import com.sap.cds.services.handler.EventHandler;
 import com.sap.cds.services.handler.annotations.On;
 import com.sap.cds.services.handler.annotations.ServiceName;
 import com.sap.cds.services.persistence.PersistenceService;
-import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import cds.gen.equipment.inspection.InspectionApproval;
+import cds.gen.equipment.inspection.InspectionApproval_;
+import cds.gen.equipment.inspection.InspectionComment;
+import cds.gen.equipment.inspection.InspectionComment_;
 import cds.gen.inspectionservice.*;
 import customer.final_course_sap.report.PdfReportGenerator;
-import com.sap.cds.ql.Select;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * Service handler for Equipment Inspection Service
- * Implements search, filtering, and report generation logic
+ * Inspection Service Handler - SAP CAP Java
+ * Xử lý tất cả custom functions và actions cho InspectionService
  */
 @Component
-@ServiceName("InspectionService")
-public class InspectionServiceHandler {
+@ServiceName(InspectionService_.CDS_NAME)
+public class InspectionServiceHandler implements EventHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(InspectionServiceHandler.class);
   private final PersistenceService persistenceService;
@@ -37,254 +41,70 @@ public class InspectionServiceHandler {
     this.persistenceService = persistenceService;
   }
 
-  /**
-   * Handle searchInspections function call
-   * Search and filter inspection records based on criteria
-   */
-  @On(event = "searchInspections")
-  public List<InspectionSearchResult> handleSearchInspections(SearchInspectionsContext context) {
-    logger.info("Searching inspections with parameters - Equipment: {}, Inspector: {}, Status: {}",
-        context.getEquipmentId(), context.getInspectorId(), context.getStatus());
+  // ====================== SEARCH ======================
+  @On(event = SearchInspectionsContext.CDS_NAME)
+  public void handleSearchInspections(SearchInspectionsContext context) {
+    String search = context.getSearch();
+    String status = context.getStatus();
+    String equipmentId = context.getEquipmentId();
+    String inspectorId = context.getInspectorId();
+    LocalDate inspectionDateFrom = context.getInspectionDateFrom();
+    LocalDate inspectionDateTo = context.getInspectionDateTo();
+    String equipmentName = context.getEquipmentName();
+    Integer limit = context.getLimit() != null ? context.getLimit() : 100;
+    Integer offset = context.getOffset() != null ? context.getOffset() : 0;
+
+    logger.info("Search inspections with filters: status={}, inspectorId={}", status, inspectorId);
 
     try {
-      // Build query based on provided filters
-      Select<?> query = Select.from(Inspection_.class);
+      CqnSelect select = Select.from(Inspection_.class)
+          .columns(i -> i.ID(),
+              i -> i.inspectionDate(),
+              i -> i.status(),
+              i -> i.findings(),
+              i -> i.equipment().expand(e -> e.name(), e -> e.type()),
+              i -> i.inspector().expand(ins -> ins.name()))
+          .where(i -> {
+            List<com.sap.cds.ql.cqn.CqnPredicate> predicates = new ArrayList<>();
 
-      List<Inspection> inspections = persistenceService.run(query).listOf(Inspection.class);
+            if (equipmentId != null && !equipmentId.isEmpty()) {
+              predicates.add(i.equipment_ID().eq(equipmentId));
+            }
+            if (inspectorId != null && !inspectorId.isEmpty()) {
+              predicates.add(i.inspector_ID().eq(inspectorId));
+            }
+            if (status != null && !status.isEmpty()) {
+              predicates.add(i.status().eq(status));
+            }
+            if (inspectionDateFrom != null) {
+              predicates.add(i.inspectionDate().ge(inspectionDateFrom));
+            }
+            if (inspectionDateTo != null) {
+              predicates.add(i.inspectionDate().le(inspectionDateTo));
+            }
+            if (equipmentName != null && !equipmentName.isEmpty()) {
+              predicates.add(i.equipment().name().contains(equipmentName));
+            }
 
-      // Filter results based on parameters
-      List<Inspection> filtered = inspections.stream()
-          .filter(i -> filterByEquipmentId(i, context.getEquipmentId()))
-          .filter(i -> filterByEquipmentName(i, context.getEquipmentName()))
-          .filter(i -> filterByDateRange(i, context.getInspectionDateFrom(), context.getInspectionDateTo()))
-          .filter(i -> filterByInspectorId(i, context.getInspectorId()))
-          .filter(i -> filterByStatus(i, context.getStatus()))
-          .collect(Collectors.toList());
+            if (predicates.isEmpty()) {
+              return i.ID().isNotNull();
+            }
 
-      // Convert to search result format
-      return filtered.stream()
+            return com.sap.cds.ql.CQL.and(predicates);
+          })
+          .orderBy(i -> i.inspectionDate().desc());
+      // Note: limit/offset handled by frontend pagination
+      List<Inspection> inspections = persistenceService.run(select).listOf(Inspection.class);
+      List<InspectionSearchResult> results = inspections.stream()
           .map(this::toSearchResult)
-          .collect(Collectors.toList());
+          .toList();
+
+      context.setResult(results);
 
     } catch (Exception e) {
-      logger.error("Error searching inspections", e);
-      throw new ServiceException("Failed to search inspections: " + e.getMessage());
+      logger.error("Error during searchInspections", e);
+      throw new ServiceException("Failed to search inspections", e);
     }
-  }
-
-  /**
-   * Handle generateReport function call
-   * Generate inspection report based on inspection data
-   */
-  @On(event = "generateReport")
-  public ReportGenerationResponse handleGenerateReport(GenerateReportContext context) {
-    String inspectionId = context.getInspectionId();
-    String additionalComments = context.getAdditionalComments();
-
-    logger.info("Generating report for inspection: {}", inspectionId);
-
-    try {
-      // Retrieve inspection details
-      Optional<Inspection> inspection = persistenceService.run(
-          Select.from(Inspection_.class)
-              .where(i -> i.ID().eq(inspectionId)))
-          .first(Inspection.class);
-
-      if (!inspection.isPresent()) {
-        logger.warn("Inspection not found: {}", inspectionId);
-        throw new ServiceException("Inspection not found: " + inspectionId);
-      }
-
-      Inspection insp = inspection.get();
-
-      // Get equipment details
-      String equipmentId = insp.getEquipmentId();
-      Optional<Equipment> equipment = persistenceService.run(
-          Select.from(Equipment_.class)
-              .where(e -> e.ID().eq(equipmentId)))
-          .first(Equipment.class);
-
-      // Get inspector details
-      String inspectorId = insp.getInspectorId();
-      Optional<Inspector> inspector = persistenceService.run(
-          Select.from(Inspector_.class)
-              .where(i -> i.ID().eq(inspectorId)))
-          .first(Inspector.class);
-
-      // Generate PDF
-      String pdfContent = PdfReportGenerator.generateInspectionReport(
-          equipment.map(Equipment::getName).orElse("N/A"),
-          equipment.map(Equipment::getType).orElse("N/A"),
-          equipment.map(Equipment::getLocation).orElse("N/A"),
-          equipment.map(Equipment::getSerialNumber).orElse("N/A"),
-          insp.getInspectionDate() != null ? insp.getInspectionDate().toString() : "N/A",
-          insp.getCompletionDate() != null ? insp.getCompletionDate().toString() : "N/A",
-          inspector.map(Inspector::getName).orElse("N/A"),
-          inspector.map(Inspector::getDepartment).orElse("N/A"),
-          insp.getStatus(),
-          insp.getFindings(),
-          insp.getSafetyIssues(),
-          insp.getNotes(),
-          additionalComments,
-          null,
-          null);
-
-      // Create InspectionReport record
-      InspectionReport report = InspectionReport.create();
-      report.setInspectionId(inspectionId);
-      report.setAdditionalComments(additionalComments);
-      report.setReportPdf(pdfContent);
-      report.setExportedAt(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
-
-      // Save report
-      persistenceService.run(com.sap.cds.ql.Insert.into(InspectionReport_.class)
-          .entry(report));
-
-      logger.info("Report generated successfully for inspection: {}", inspectionId);
-
-      ReportGenerationResponse response = ReportGenerationResponse.create();
-      response.setReportId(report.getId());
-      response.setPdfUrl("/api/reports/export/" + report.getId());
-      response.setMessage("Report generated successfully");
-
-      return response;
-
-    } catch (Exception e) {
-      logger.error("Error generating report for inspection: " + inspectionId, e);
-      throw new ServiceException("Failed to generate report: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Handle exportReportPdf function call
-   * Export report as base64 encoded PDF
-   */
-  @On(event = "exportReportPdf")
-  public String handleExportReportPdf(ExportReportPdfContext context) {
-    String reportId = context.getReportId();
-    logger.info("Exporting PDF for report: {}", reportId);
-
-    try {
-      Optional<InspectionReport> report = persistenceService.run(
-          Select.from(InspectionReport_.class)
-              .where(r -> r.ID().eq(reportId)))
-          .first(InspectionReport.class);
-
-      if (!report.isPresent()) {
-        throw new ServiceException("Report not found: " + reportId);
-      }
-
-      return report.get().getReportPdf();
-
-    } catch (Exception e) {
-      logger.error("Error exporting report PDF: " + reportId, e);
-      throw new ServiceException("Failed to export PDF: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Handle getInspectionDetails function call
-   * Get complete inspection details with related data
-   */
-  @On(event = "getInspectionDetails")
-  public Map<String, Object> handleGetInspectionDetails(GetInspectionDetailsContext context) {
-    String inspectionId = context.getInspectionId();
-    logger.info("Retrieving details for inspection: {}", inspectionId);
-
-    try {
-      Optional<Inspection> inspection = persistenceService.run(
-          Select.from(Inspection_.class)
-              .where(i -> i.ID().eq(inspectionId)))
-          .first(Inspection.class);
-
-      if (!inspection.isPresent()) {
-        throw new ServiceException("Inspection not found: " + inspectionId);
-      }
-
-      Inspection insp = inspection.get();
-
-      // Get equipment details
-      Optional<Equipment> equipment = persistenceService.run(
-          Select.from(Equipment_.class)
-              .where(e -> e.ID().eq(insp.getEquipmentId())))
-          .first(Equipment.class);
-
-      // Get inspector details
-      Optional<Inspector> inspector = persistenceService.run(
-          Select.from(Inspector_.class)
-              .where(i -> i.ID().eq(insp.getInspectorId())))
-          .first(Inspector.class);
-
-      // Build response
-      Map<String, Object> details = new LinkedHashMap<>();
-      details.put("inspectionId", insp.getId());
-      details.put("equipmentName", equipment.map(Equipment::getName).orElse("N/A"));
-      details.put("equipmentType", equipment.map(Equipment::getType).orElse("N/A"));
-      details.put("equipmentLocation", equipment.map(Equipment::getLocation).orElse("N/A"));
-      details.put("serialNumber", equipment.map(Equipment::getSerialNumber).orElse("N/A"));
-      details.put("inspectionDate", insp.getInspectionDate());
-      details.put("completionDate", insp.getCompletionDate());
-      details.put("inspectorName", inspector.map(Inspector::getName).orElse("N/A"));
-      details.put("inspectorDepartment", inspector.map(Inspector::getDepartment).orElse("N/A"));
-      details.put("status", insp.getStatus());
-      details.put("findings", insp.getFindings());
-      details.put("safetyIssues", insp.getSafetyIssues());
-      details.put("notes", insp.getNotes());
-
-      return details;
-
-    } catch (Exception e) {
-      logger.error("Error retrieving inspection details: " + inspectionId, e);
-      throw new ServiceException("Failed to retrieve details: " + e.getMessage());
-    }
-  }
-
-  // Helper methods for filtering
-
-  private boolean filterByEquipmentId(Inspection inspection, String equipmentId) {
-    if (equipmentId == null || equipmentId.isEmpty()) {
-      return true;
-    }
-    return equipmentId.equals(inspection.getEquipmentId());
-  }
-
-  private boolean filterByEquipmentName(Inspection inspection, String equipmentName) {
-    if (equipmentName == null || equipmentName.isEmpty()) {
-      return true;
-    }
-    // This would require joining with Equipment entity - simplified for now
-    return true;
-  }
-
-  private boolean filterByDateRange(Inspection inspection, LocalDate from, LocalDate to) {
-    if (from == null && to == null) {
-      return true;
-    }
-    LocalDate inspDate = inspection.getInspectionDate();
-    if (inspDate == null) {
-      return false;
-    }
-    if (from != null && inspDate.isBefore(from)) {
-      return false;
-    }
-    if (to != null && inspDate.isAfter(to)) {
-      return false;
-    }
-    return true;
-  }
-
-  private boolean filterByInspectorId(Inspection inspection, String inspectorId) {
-    if (inspectorId == null || inspectorId.isEmpty()) {
-      return true;
-    }
-    return inspectorId.equals(inspection.getInspectorId());
-  }
-
-  private boolean filterByStatus(Inspection inspection, String status) {
-    if (status == null || status.isEmpty()) {
-      return true;
-    }
-    return status.equals(inspection.getStatus());
   }
 
   private InspectionSearchResult toSearchResult(Inspection inspection) {
@@ -294,25 +114,203 @@ public class InspectionServiceHandler {
     result.setStatus(inspection.getStatus());
     result.setFindings(inspection.getFindings());
 
-    // Enrich with related Equipment and Inspector names for UI
-    try {
-      Optional<Equipment> equipment = persistenceService.run(
-          Select.from(Equipment_.class)
-              .where(e -> e.ID().eq(inspection.getEquipmentId())))
-          .first(Equipment.class);
-
-      Optional<Inspector> inspector = persistenceService.run(
-          Select.from(Inspector_.class)
-              .where(i -> i.ID().eq(inspection.getInspectorId())))
-          .first(Inspector.class);
-
-      result.setEquipmentName(equipment.map(Equipment::getName).orElse(null));
-      result.setEquipmentType(equipment.map(Equipment::getType).orElse(null));
-      result.setInspectorName(inspector.map(Inspector::getName).orElse(null));
-    } catch (Exception e) {
-      logger.warn("Unable to enrich search result with equipment/inspector data for inspection {}", inspection.getId(), e);
+    // Enrich from expanded data
+    if (inspection.getEquipment() != null) {
+      result.setEquipmentName(inspection.getEquipment().getName());
+      result.setEquipmentType(inspection.getEquipment().getType());
+    }
+    if (inspection.getInspector() != null) {
+      result.setInspectorName(inspection.getInspector().getName());
     }
 
     return result;
+  }
+
+  // ====================== GET DETAILS ======================
+  @On(event = GetInspectionDetailsContext.CDS_NAME)
+  public void handleGetInspectionDetails(GetInspectionDetailsContext context) {
+    String inspectionId = context.getInspectionId();
+
+    try {
+      Optional<Inspection> opt = persistenceService.run(
+          Select.from(Inspection_.class)
+              .where(i -> i.ID().eq(inspectionId))
+              .columns(i -> i._all(),
+                  i -> i.equipment().expand(),
+                  i -> i.inspector().expand()))
+          .first(Inspection.class);
+
+      Inspection insp = opt.orElseThrow(() -> new ServiceException("Inspection not found: " + inspectionId));
+
+      GetInspectionDetailsContext.ReturnType details = GetInspectionDetailsContext.ReturnType.create();
+
+      details.setInspectionId(insp.getId());
+      details.setInspectionDate(insp.getInspectionDate());
+      details.setCompletionDate(insp.getCompletionDate());
+      details.setStatus(insp.getStatus());
+      details.setFindings(insp.getFindings());
+      details.setSafetyIssues(insp.getSafetyIssues());
+      details.setNotes(insp.getNotes());
+
+      if (insp.getEquipment() != null) {
+        details.setEquipmentName(insp.getEquipment().getName());
+        details.setEquipmentType(insp.getEquipment().getType());
+        details.setEquipmentLocation(insp.getEquipment().getLocation());
+        details.setSerialNumber(insp.getEquipment().getSerialNumber());
+      }
+
+      if (insp.getInspector() != null) {
+        details.setInspectorName(insp.getInspector().getName());
+        details.setInspectorDepartment(insp.getInspector().getDepartment());
+      }
+
+      context.setResult(details);
+
+    } catch (Exception e) {
+      logger.error("Error getting inspection details {}", inspectionId, e);
+      throw new ServiceException("Failed to get inspection details", e);
+    }
+  }
+
+  @On(event = GenerateReportContext.CDS_NAME)
+  public void handleGenerateReport(GenerateReportContext context) {
+    String inspectionId = context.getInspectionId();
+    String additionalComments = context.getAdditionalComments() != null ? context.getAdditionalComments() : "";
+
+    try {
+      Inspection insp = persistenceService.run(
+          Select.from(Inspection_.class)
+              .where(i -> i.ID().eq(inspectionId))
+              .columns(i -> i._all(), i -> i.equipment().expand(), i -> i.inspector().expand()))
+          .first(Inspection.class)
+          .orElseThrow(() -> new ServiceException("Inspection not found: " + inspectionId));
+
+      String approvedBy = "Pending";
+      String approvalDate = "Pending";
+
+      // Đảm bảo dùng đúng tên trường: inspection_ID (thường là vậy trong CAP Java)
+      Optional<InspectionApproval> approvalOpt = persistenceService.run(
+          Select.from(InspectionApproval_.class)
+              .where(a -> a.inspection_ID().eq(inspectionId))
+              .orderBy(a -> a.approvalDate().desc()))
+          .first(InspectionApproval.class);
+
+      if (approvalOpt.isPresent()) {
+        approvedBy = approvalOpt.get().getApprovedBy();
+        approvalDate = approvalOpt.get().getApprovalDate().toString();
+      }
+
+      byte[] pdfBytes = PdfReportGenerator.generateInspectionReport(
+          insp.getEquipment() != null ? insp.getEquipment().getName() : "N/A",
+          insp.getEquipment() != null ? insp.getEquipment().getType() : "N/A",
+          insp.getEquipment() != null ? insp.getEquipment().getLocation() : "N/A",
+          insp.getEquipment() != null ? insp.getEquipment().getSerialNumber() : "N/A",
+          insp.getInspectionDate() != null ? insp.getInspectionDate().toString() : "N/A",
+          insp.getCompletionDate() != null ? insp.getCompletionDate().toString() : "N/A",
+          insp.getInspector() != null ? insp.getInspector().getName() : "N/A",
+          insp.getInspector() != null ? insp.getInspector().getDepartment() : "N/A",
+          insp.getStatus(),
+          insp.getFindings(),
+          insp.getSafetyIssues(),
+          insp.getNotes(),
+          additionalComments,
+          approvedBy,
+          approvalDate);
+
+      context.setResult(pdfBytes);
+    } catch (Exception e) {
+      logger.error("Failed to generate report", e);
+      throw new ServiceException("Failed to generate PDF report", e);
+    }
+  }
+
+  @On(event = ExportReportPdfContext.CDS_NAME)
+  public void handleExportReportPdf(ExportReportPdfContext context) {
+    String reportId = context.getReportId();
+    try {
+      InspectionReport report = persistenceService.run(
+          Select.from(InspectionReport_.class).where(r -> r.ID().eq(reportId)))
+          .first(InspectionReport.class)
+          .orElseThrow(() -> new ServiceException("Report not found"));
+
+      // CHECK NULL TRƯỚC KHI TRẢ VỀ
+      if (report.getReportPdf() == null) {
+        throw new ServiceException("PDF content is missing for this report record.");
+      }
+
+      context.setResult(report.getReportPdf());
+    } catch (ServiceException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new ServiceException("Error exporting PDF", e);
+    }
+  }
+
+  @On(event = AddCommentContext.CDS_NAME)
+  public void handleAddComment(AddCommentContext context) {
+    try {
+      InspectionComment comment = InspectionComment.create();
+      comment.setInspectionId(context.getInspectionId());
+      comment.setCommentText(context.getCommentText());
+      comment.setCreatedAt(java.time.Instant.now());
+      comment.setCreatedBy(context.getUserInfo().getName());
+
+      persistenceService.run(Insert.into(InspectionComment_.class).entry(comment));
+      context.setResult(true);
+    } catch (Exception e) {
+      throw new ServiceException("Failed to add comment", e);
+    }
+  }
+
+  @On(event = ApproveInspectionContext.CDS_NAME)
+  public void handleApproveInspection(ApproveInspectionContext context) {
+    String inspectionId = context.getInspectionId();
+    try {
+      persistenceService.run(Update.entity(Inspection_.class)
+          .where(i -> i.ID().eq(inspectionId))
+          .data(Inspection.STATUS, "Approved"));
+
+      InspectionApproval approval = InspectionApproval.create();
+      approval.setInspectionId(inspectionId);
+      approval.setApprovedBy(context.getUserInfo().getName());
+      approval.setApprovalDate(java.time.Instant.now());
+      approval.setNote(context.getApprovalNote());
+
+      persistenceService.run(Insert.into(InspectionApproval_.class).entry(approval));
+      context.setResult(true);
+    } catch (Exception e) {
+      throw new ServiceException("Approval failed", e);
+    }
+  }
+
+  @On(event = PrintInspectionsContext.CDS_NAME)
+  public void handlePrintInspections(PrintInspectionsContext context) {
+    List<String> inspectionIds = new ArrayList<>(context.getInspectionIds());
+
+    logger.info("Printing {} inspections", inspectionIds.size());
+
+    try {
+      // Fetch all inspections
+      List<Inspection> inspections = new ArrayList<>();
+      for (String id : inspectionIds) {
+        Inspection insp = persistenceService.run(
+            Select.from(Inspection_.class)
+                .where(i -> i.ID().eq(id))
+                .columns(i -> i._all(), i -> i.equipment().expand(), i -> i.inspector().expand()))
+            .first(Inspection.class)
+            .orElse(null);
+        if (insp != null) {
+          inspections.add(insp);
+        }
+      }
+
+      // Generate PDF with all inspections
+      byte[] pdfBytes = PdfReportGenerator.generateMultipleInspectionsReport(inspections);
+
+      context.setResult(pdfBytes);
+    } catch (Exception e) {
+      logger.error("Failed to print inspections", e);
+      throw new ServiceException("Failed to generate print report", e);
+    }
   }
 }

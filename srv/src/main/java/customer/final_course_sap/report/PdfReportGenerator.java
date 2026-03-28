@@ -1,236 +1,197 @@
 package customer.final_course_sap.report;
 
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.UnitValue;
-import com.itextpdf.kernel.font.PdfFontFactory;
-import com.itextpdf.kernel.font.PdfFont;
-import com.itextpdf.io.font.constants.StandardFonts;
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.itextpdf.io.font.PdfEncodings;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+
 /**
  * PDF Report Generator for Equipment Inspection Reports
- * Generates professional inspection reports in PDF format using iText
+ * Trả về byte array trực tiếp để tối ưu hiệu năng.
  */
 public class PdfReportGenerator {
 
-  private static final Logger logger = LoggerFactory.getLogger(PdfReportGenerator.class);
+        private static final Logger logger = LoggerFactory.getLogger(PdfReportGenerator.class);
 
-  /**
-   * Generate inspection report PDF
-   * 
-   * @param equipmentName       Name of the equipment
-   * @param equipmentType       Type of equipment
-   * @param location            Equipment location
-   * @param serialNumber        Equipment serial number
-   * @param inspectionDate      Date of inspection
-   * @param completionDate      Completion date
-   * @param inspectorName       Name of the inspector
-   * @param inspectorDepartment Inspector department
-   * @param status              Inspection status
-   * @param findings            Inspection findings
-   * @param safetyIssues        Safety issues found
-   * @param notes               Additional notes
-   * @param additionalComments  Additional comments
-   * @param approvedBy          Approved by
-   * @param approvalDate        Approval date
-   * @return Base64 encoded PDF content
-   */
-  public static String generateInspectionReport(
-      String equipmentName,
-      String equipmentType,
-      String location,
-      String serialNumber,
-      String inspectionDate,
-      String completionDate,
-      String inspectorName,
-      String inspectorDepartment,
-      String status,
-      String findings,
-      String safetyIssues,
-      String notes,
-      String additionalComments,
-      String approvedBy,
-      String approvalDate) {
+        public static byte[] generateInspectionReport(
+                        String equipmentName,
+                        String equipmentType,
+                        String location,
+                        String serialNumber,
+                        String inspectionDate,
+                        String completionDate,
+                        String inspectorName,
+                        String inspectorDepartment,
+                        String status,
+                        String findings,
+                        String safetyIssues,
+                        String notes,
+                        String additionalComments,
+                        String approvedBy,
+                        String approvalDate) {
 
-    try {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      PdfWriter writer = new PdfWriter(baos);
-      PdfDocument pdfDoc = new PdfDocument(writer);
-      Document document = new Document(pdfDoc);
+                // Sử dụng try-with-resources để đảm bảo đóng stream tự động
+                try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                        PdfWriter writer = new PdfWriter(baos);
+                        PdfDocument pdfDoc = new PdfDocument(writer);
+                        Document document = new Document(pdfDoc);
 
-      // Set font
-      PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.COURIER_BOLD);
-      PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.COURIER);
+                        // Fonts
+                        PdfFont regularFont = PdfFontFactory.createFont("Helvetica");
+                        PdfFont boldFont = PdfFontFactory.createFont("Helvetica-Bold");
 
-      // Title
-      Paragraph title = new Paragraph("EQUIPMENT INSPECTION REPORT")
-          .setFont(boldFont)
-          .setFontSize(20)
-          .setTextAlignment(TextAlignment.CENTER);
-      document.add(title);
+                        // Title
+                        document.add(new Paragraph("EQUIPMENT INSPECTION REPORT")
+                                        .setFont(boldFont)
+                                        .setFontSize(20)
+                                        .setTextAlignment(TextAlignment.CENTER));
 
-      document.add(new Paragraph("\n"));
+                        document.add(new Paragraph("\n"));
 
-      // Equipment Information Section
-      Paragraph equipmentHeader = new Paragraph("EQUIPMENT INFORMATION")
-          .setFont(boldFont)
-          .setFontSize(14);
-      document.add(equipmentHeader);
+                        // --- Section: Equipment Information ---
+                        addSectionHeader(document, "EQUIPMENT INFORMATION", boldFont);
+                        Table equipmentTable = new Table(UnitValue.createPercentArray(new float[] { 30, 70 }))
+                                        .useAllAvailableWidth();
 
-      Table equipmentTable = new Table(2);
-      equipmentTable.setWidth(UnitValue.createPercentValue(100));
+                        addTableRow(equipmentTable, "Equipment Name:", equipmentName, boldFont, regularFont);
+                        addTableRow(equipmentTable, "Equipment Type:", equipmentType, boldFont, regularFont);
+                        addTableRow(equipmentTable, "Location:", location, boldFont, regularFont);
+                        addTableRow(equipmentTable, "Serial Number:", serialNumber, boldFont, regularFont);
 
-      equipmentTable.addCell(createCell("Equipment Name:", boldFont));
-      equipmentTable.addCell(createCell(equipmentName != null ? equipmentName : "N/A", regularFont));
+                        document.add(equipmentTable);
+                        document.add(new Paragraph("\n"));
 
-      equipmentTable.addCell(createCell("Equipment Type:", boldFont));
-      equipmentTable.addCell(createCell(equipmentType != null ? equipmentType : "N/A", regularFont));
+                        // --- Section: Inspection Details ---
+                        addSectionHeader(document, "INSPECTION DETAILS", boldFont);
+                        Table inspectionTable = new Table(UnitValue.createPercentArray(new float[] { 30, 70 }))
+                                        .useAllAvailableWidth();
 
-      equipmentTable.addCell(createCell("Location:", boldFont));
-      equipmentTable.addCell(createCell(location != null ? location : "N/A", regularFont));
+                        addTableRow(inspectionTable, "Inspection Date:", inspectionDate, boldFont, regularFont);
+                        addTableRow(inspectionTable, "Completion Date:", completionDate, boldFont, regularFont);
+                        addTableRow(inspectionTable, "Status:", status, boldFont, regularFont);
 
-      equipmentTable.addCell(createCell("Serial Number:", boldFont));
-      equipmentTable.addCell(createCell(serialNumber != null ? serialNumber : "N/A", regularFont));
+                        document.add(inspectionTable);
+                        document.add(new Paragraph("\n"));
 
-      document.add(equipmentTable);
-      document.add(new Paragraph("\n"));
+                        // --- Section: Findings & Issues ---
+                        addSectionHeader(document, "INSPECTION FINDINGS", boldFont);
+                        document.add(new Paragraph(findings != null ? findings : "No findings documented")
+                                        .setFont(regularFont));
 
-      // Inspection Information Section
-      Paragraph inspectionHeader = new Paragraph("INSPECTION DETAILS")
-          .setFont(boldFont)
-          .setFontSize(14);
-      document.add(inspectionHeader);
+                        if (safetyIssues != null && !safetyIssues.isEmpty()) {
+                                addSectionHeader(document, "SAFETY ISSUES", boldFont);
+                                document.add(new Paragraph(safetyIssues).setFont(regularFont));
+                        }
 
-      Table inspectionTable = new Table(2);
-      inspectionTable.setWidth(UnitValue.createPercentValue(100));
+                        // --- Section: Approval ---
+                        document.add(new Paragraph("\n"));
+                        addSectionHeader(document, "APPROVAL", boldFont);
+                        Table approvalTable = new Table(UnitValue.createPercentArray(new float[] { 30, 70 }))
+                                        .useAllAvailableWidth();
 
-      inspectionTable.addCell(createCell("Inspection Date:", boldFont));
-      inspectionTable.addCell(createCell(inspectionDate != null ? inspectionDate : "N/A", regularFont));
+                        addTableRow(approvalTable, "Approved By:", approvedBy != null ? approvedBy : "Pending",
+                                        boldFont,
+                                        regularFont);
+                        addTableRow(approvalTable, "Approval Date:", approvalDate != null ? approvalDate : "Pending",
+                                        boldFont,
+                                        regularFont);
 
-      inspectionTable.addCell(createCell("Completion Date:", boldFont));
-      inspectionTable.addCell(createCell(completionDate != null ? completionDate : "N/A", regularFont));
+                        document.add(approvalTable);
 
-      inspectionTable.addCell(createCell("Status:", boldFont));
-      inspectionTable.addCell(createCell(status != null ? status : "N/A", regularFont));
+                        document.close();
 
-      document.add(inspectionTable);
-      document.add(new Paragraph("\n"));
+                        logger.info("PDF report generated successfully for: {}", equipmentName);
+                        return baos.toByteArray();
 
-      // Inspector Information Section
-      Paragraph inspectorHeader = new Paragraph("INSPECTOR INFORMATION")
-          .setFont(boldFont)
-          .setFontSize(14);
-      document.add(inspectorHeader);
+                } catch (Exception e) {
+                        logger.error("Error generating PDF report", e);
+                        throw new RuntimeException("Failed to generate PDF report", e);
+                }
+        }
 
-      Table inspectorTable = new Table(2);
-      inspectorTable.setWidth(UnitValue.createPercentValue(100));
+        private static void addSectionHeader(Document doc, String title, PdfFont font) {
+                doc.add(new Paragraph(title).setFont(font).setFontSize(14).setUnderline());
+        }
 
-      inspectorTable.addCell(createCell("Inspector Name:", boldFont));
-      inspectorTable.addCell(createCell(inspectorName != null ? inspectorName : "N/A", regularFont));
+        private static void addTableRow(Table table, String label, String value, PdfFont bold, PdfFont reg) {
+                table.addCell(new Cell().add(new Paragraph(label).setFont(bold)).setBorder(null));
+                table.addCell(new Cell().add(new Paragraph(value != null ? value : "N/A").setFont(reg))
+                                .setBorder(null));
+        }
 
-      inspectorTable.addCell(createCell("Department:", boldFont));
-      inspectorTable.addCell(createCell(inspectorDepartment != null ? inspectorDepartment : "N/A", regularFont));
+        public static byte[] generateMultipleInspectionsReport(
+                        java.util.List<cds.gen.inspectionservice.Inspection> inspections) {
+                try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                        PdfWriter writer = new PdfWriter(baos);
+                        PdfDocument pdfDoc = new PdfDocument(writer);
+                        Document document = new Document(pdfDoc);
 
-      document.add(inspectorTable);
-      document.add(new Paragraph("\n"));
+                        PdfFont boldFont = PdfFontFactory.createFont("Helvetica-Bold");
+                        PdfFont regularFont = PdfFontFactory.createFont("Helvetica");
 
-      // Findings Section
-      Paragraph findingsHeader = new Paragraph("INSPECTION FINDINGS")
-          .setFont(boldFont)
-          .setFontSize(14);
-      document.add(findingsHeader);
+                        // Title
+                        Paragraph title = new Paragraph("EQUIPMENT INSPECTION REPORT - BATCH")
+                                        .setFont(boldFont)
+                                        .setFontSize(18)
+                                        .setTextAlignment(TextAlignment.CENTER);
+                        document.add(title);
 
-      Paragraph findingsContent = new Paragraph(findings != null ? findings : "No findings documented")
-          .setFont(regularFont);
-      document.add(findingsContent);
-      document.add(new Paragraph("\n"));
+                        Paragraph dateGen = new Paragraph("Generated: " + java.time.LocalDateTime.now())
+                                        .setTextAlignment(TextAlignment.CENTER)
+                                        .setFontSize(10);
+                        document.add(dateGen);
+                        document.add(new Paragraph("\n"));
 
-      // Safety Issues Section
-      if (safetyIssues != null && !safetyIssues.isEmpty()) {
-        Paragraph safetyHeader = new Paragraph("SAFETY ISSUES")
-            .setFont(boldFont)
-            .setFontSize(14);
-        document.add(safetyHeader);
+                        // Table with summary
+                        Table summaryTable = new Table(
+                                        UnitValue.createPercentArray(new float[] { 10, 20, 20, 15, 15, 20 }))
+                                        .useAllAvailableWidth();
+                        summaryTable.addCell(new Cell().add(new Paragraph("ID").setFont(boldFont)));
+                        summaryTable.addCell(new Cell().add(new Paragraph("Equipment").setFont(boldFont)));
+                        summaryTable.addCell(new Cell().add(new Paragraph("Inspector").setFont(boldFont)));
+                        summaryTable.addCell(new Cell().add(new Paragraph("Date").setFont(boldFont)));
+                        summaryTable.addCell(new Cell().add(new Paragraph("Status").setFont(boldFont)));
+                        summaryTable.addCell(new Cell().add(new Paragraph("Findings").setFont(boldFont)));
 
-        Paragraph safetyContent = new Paragraph(safetyIssues)
-            .setFont(regularFont);
-        document.add(safetyContent);
-        document.add(new Paragraph("\n"));
-      }
+                        for (cds.gen.inspectionservice.Inspection insp : inspections) {
+                                String equipName = insp.getEquipment() != null ? insp.getEquipment().getName() : "N/A";
+                                String inspName = insp.getInspector() != null ? insp.getInspector().getName() : "N/A";
+                                String dateStr = insp.getInspectionDate() != null ? insp.getInspectionDate().toString()
+                                                : "N/A";
+                                String findings = insp.getFindings() != null ? insp.getFindings().substring(0,
+                                                Math.min(30, insp.getFindings().length())) : "N/A";
 
-      // Additional Notes Section
-      if (notes != null && !notes.isEmpty()) {
-        Paragraph notesHeader = new Paragraph("ADDITIONAL NOTES")
-            .setFont(boldFont)
-            .setFontSize(14);
-        document.add(notesHeader);
+                                summaryTable.addCell(new Cell().add(new Paragraph(insp.getId()).setFont(regularFont)));
+                                summaryTable.addCell(new Cell().add(new Paragraph(equipName).setFont(regularFont)));
+                                summaryTable.addCell(new Cell().add(new Paragraph(inspName).setFont(regularFont)));
+                                summaryTable.addCell(new Cell().add(new Paragraph(dateStr).setFont(regularFont)));
+                                summaryTable.addCell(new Cell()
+                                                .add(new Paragraph(insp.getStatus() != null ? insp.getStatus() : "N/A")
+                                                                .setFont(regularFont)));
+                                summaryTable.addCell(
+                                                new Cell().add(new Paragraph(findings + "...").setFont(regularFont)));
+                        }
 
-        Paragraph notesContent = new Paragraph(notes)
-            .setFont(regularFont);
-        document.add(notesContent);
-        document.add(new Paragraph("\n"));
-      }
+                        document.add(summaryTable);
+                        document.close();
 
-      // Additional Comments Section
-      if (additionalComments != null && !additionalComments.isEmpty()) {
-        Paragraph commentsHeader = new Paragraph("ADDITIONAL COMMENTS")
-            .setFont(boldFont)
-            .setFontSize(14);
-        document.add(commentsHeader);
-
-        Paragraph commentsContent = new Paragraph(additionalComments)
-            .setFont(regularFont);
-        document.add(commentsContent);
-        document.add(new Paragraph("\n"));
-      }
-
-      // Approval Section
-      document.add(new Paragraph("\n"));
-      Paragraph approvalHeader = new Paragraph("APPROVAL")
-          .setFont(boldFont)
-          .setFontSize(14);
-      document.add(approvalHeader);
-
-      Table approvalTable = new Table(2);
-      approvalTable.setWidth(UnitValue.createPercentValue(100));
-
-      approvalTable.addCell(createCell("Approved By:", boldFont));
-      approvalTable.addCell(createCell(approvedBy != null ? approvedBy : "Pending", regularFont));
-
-      approvalTable.addCell(createCell("Approval Date:", boldFont));
-      approvalTable.addCell(createCell(approvalDate != null ? approvalDate : "Pending", regularFont));
-
-      document.add(approvalTable);
-
-      document.close();
-
-      byte[] pdfBytes = baos.toByteArray();
-      String base64Pdf = Base64.getEncoder().encodeToString(pdfBytes);
-
-      logger.info("PDF report generated successfully for equipment: {}", equipmentName);
-      return base64Pdf;
-
-    } catch (Exception e) {
-      logger.error("Error generating PDF report", e);
-      throw new RuntimeException("Failed to generate PDF report: " + e.getMessage(), e);
-    }
-  }
-
-  /**
-   * Helper method to create table cells
-   */
-  private static Cell createCell(String text, PdfFont font) {
-    Paragraph p = new Paragraph(text).setFont(font);
-    return new Cell().add(p);
-  }
+                        logger.info("Generated batch report for {} inspections", inspections.size());
+                        return baos.toByteArray();
+                } catch (Exception e) {
+                        logger.error("Error generating multiple inspections report", e);
+                        throw new RuntimeException("Failed to generate batch report", e);
+                }
+        }
 }

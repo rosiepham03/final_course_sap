@@ -32,36 +32,43 @@ entity Inspector : cuid {
 entity Inspection : cuid, managed {
     equipment: Association to Equipment;
     inspector: Association to Inspector;
+    
     inspectionDate: Date;
     completionDate: Date;
-    status: String enum { 
-        Planned; 
-        InProgress; 
-        Completed; 
-        Failed 
-    };
+    status: String enum { Planned; InProgress; Completed; Failed };
+    
     notes: String;
     findings: String;
     safetyIssues: String;
     nextInspectionDate: Date;
-    // One inspection has many inspection reports (composition relationship).
-    // We link parent and child via the child's foreign key field `inspection_ID`
-    // to avoid referencing a managed association directly in the ON condition.
-    inspectionReport: Composition of many InspectionReport
-        on inspectionReport.inspection_ID = ID;
+
+    // Composition đúng cách
+    inspectionReports: Composition of many InspectionReport on inspectionReports.inspection = $self;
 }
 
-/**
- * InspectionReport entity - stores the generated report with additional data
- */
 entity InspectionReport : cuid, managed {
-    // Foreign key + association back to the parent Inspection for the composition above
-    inspection_ID   : UUID;
-    inspection      : Association to Inspection on inspection.ID = inspection_ID;
+    inspection: Association to Inspection;
+    
     additionalComments: String;
-    approvedBy: String;
+    approvedBy: Association to Inspector;   // tốt hơn là String
     approvalDate: Date;
-    reportPdf: LargeString; // Base64 encoded PDF
+    
+    reportPdf: LargeBinary;                 // thay vì LargeString
     exportedAt: Timestamp;
 }
 
+entity InspectionComment {
+  key ID : UUID;
+  inspection : Association to Inspection;
+  commentText : String;
+  createdBy : String;
+  createdAt : Timestamp;
+}
+
+entity InspectionApproval {
+  key ID : UUID;
+  inspection : Association to Inspection;
+  approvedBy : String;
+  approvalDate : Timestamp;
+  note : String;
+}

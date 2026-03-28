@@ -11,11 +11,11 @@ This guide helps developers extend and customize the application.
 │                  Frontend (Fiori UI)                 │
 │            (Fiori Elements + CDS Annotations)        │
 └──────────────────────┬──────────────────────────────┘
-                       │ OData V4 Calls
+                       │ OData V4 Calls (CDS Native)
                        │
 ┌──────────────────────▼──────────────────────────────┐
-│         REST Controller / OData Gateway              │
-│      (InspectionController.java)                     │
+│       OData Service Layer (CDS Native)              │
+│    (InspectionService.cds) [SAP CAP Built-in]      │
 └──────────────────────┬──────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────┐
@@ -124,31 +124,6 @@ public Map<String, Object> handleScheduleMaintenance(ScheduleMaintenenceContext 
     response.put("success", true);
     response.put("scheduleId", "new-uuid");
     return response;
-}
-```
-
----
-
-### REST Controller
-**File:** `srv/src/main/java/customer/final_course_sap/controller/InspectionController.java`
-
-Exposes:
-- GET endpoints (fetching data)
-- POST endpoints (creating reports)
-
-**To add new endpoint:**
-```java
-@GetMapping("/maintenance-schedule")
-public ResponseEntity<?> getMaintenanceSchedule() {
-    try {
-        List<MaintenanceScheduleItems> schedules = persistenceService.run(
-            Select.from(MaintenanceSchedule_.class)
-        ).listOf(MaintenanceScheduleItems.class);
-        
-        return ResponseEntity.ok(schedules);
-    } catch (Exception e) {
-        return ResponseEntity.status(500).body("Error: " + e.getMessage());
-    }
 }
 ```
 

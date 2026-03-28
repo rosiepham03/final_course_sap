@@ -4,7 +4,7 @@ const app = createApp({
     data() {
         return {
             currentPage: 'dashboard',
-            apiUrl: 'http://localhost:8080/api',
+            apiUrl: 'http://localhost:8080/odata/v4/InspectionService',
             
             // Data collections
             inspections: [],
@@ -67,8 +67,10 @@ const app = createApp({
         // Load equipment
         async loadEquipment() {
             try {
-                const response = await axios.get(`${this.apiUrl}/equipment`);
-                this.equipment = response.data || [];
+                const response = await axios.get(`${this.apiUrl}/Equipment`);
+                // Handle OData response format
+                const data = response.data.value || response.data;
+                this.equipment = Array.isArray(data) ? data : [];
                 this.stats.totalEquipment = this.equipment.length;
             } catch (error) {
                 console.error('Error loading equipment:', error);
@@ -78,8 +80,10 @@ const app = createApp({
         // Load inspectors
         async loadInspectors() {
             try {
-                const response = await axios.get(`${this.apiUrl}/inspectors`);
-                this.inspectors = response.data || [];
+                const response = await axios.get(`${this.apiUrl}/Inspector`);
+                // Handle OData response format
+                const data = response.data.value || response.data;
+                this.inspectors = Array.isArray(data) ? data : [];
                 this.stats.totalInspectors = this.inspectors.length;
             } catch (error) {
                 console.error('Error loading inspectors:', error);
@@ -89,8 +93,10 @@ const app = createApp({
         // Load inspections
         async loadInspections() {
             try {
-                const response = await axios.get(`${this.apiUrl}/inspections`);
-                this.inspections = response.data || [];
+                const response = await axios.get(`${this.apiUrl}/Inspection`);
+                // Handle OData response format
+                const data = response.data.value || response.data;
+                this.inspections = Array.isArray(data) ? data : [];
                 this.recentInspections = [...this.inspections].sort((a, b) => {
                     return new Date(b.inspectionDate) - new Date(a.inspectionDate);
                 });
@@ -108,19 +114,30 @@ const app = createApp({
             this.stats.pendingReports = this.inspections.filter(i => i.status !== 'COMPLETED').length;
         },
         
+        // Validate UUID format (hex only: 0-9, a-f)
+        isValidUUID(uuid) {
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            return uuidRegex.test(uuid);
+        },
+        
         // Search inspections
         async searchInspections() {
             try {
-                const params = {};
-                if (this.filters.equipmentName) params.equipmentName = this.filters.equipmentName;
-                if (this.filters.inspectorId) params.inspectorId = this.filters.inspectorId;
-                if (this.filters.dateFrom) params.dateFrom = this.filters.dateFrom;
-                if (this.filters.dateTo) params.dateTo = this.filters.dateTo;
-                if (this.filters.status) params.status = this.filters.status;
+                const search = this.filters.equipmentName || '';
+                const status = this.filters.status || '';
+                const equipmentId = '';
+                const inspectorId = this.filters.inspectorId || '';
+                const inspectionDateFrom = this.filters.dateFrom ? `'${this.filters.dateFrom}'` : 'null';
+                const inspectionDateTo = this.filters.dateTo ? `'${this.filters.dateTo}'` : 'null';
+                const equipmentName = this.filters.equipmentName || '';
+                const limit = 100;
+                const offset = 0;
                 
-                const response = await axios.get(`${this.apiUrl}/search`, { params });
-                this.inspections = response.data || [];
+                const url = `${this.apiUrl}/searchInspections(search='${encodeURIComponent(search)}',status='${encodeURIComponent(status)}',equipmentId='${encodeURIComponent(equipmentId)}',inspectorId='${encodeURIComponent(inspectorId)}',inspectionDateFrom=${inspectionDateFrom},inspectionDateTo=${inspectionDateTo},equipmentName='${encodeURIComponent(equipmentName)}',limit=${limit},offset=${offset})`;
                 
+                const response = await axios.get(url);
+                const data = response.data.value || response.data;
+                this.inspections = Array.isArray(data) ? data : [];
                 this.showAlert('Search completed', 'info');
             } catch (error) {
                 console.error('Error searching inspections:', error);
@@ -131,34 +148,52 @@ const app = createApp({
         // Submit new inspection
         async submitInspection() {
             try {
-                const payload = {
-                    inspectionId: 'INS-' + new Date().getTime(),
-                    equipmentId: this.newInspection.equipmentId,
-                    inspectorId: this.newInspection.inspectorId,
+                // Validate required fields
+                if (!this.newInspection.equipmentId) {
+                    this.showAlert('Please select equipment', 'warning');
+                    return;
+                }
+                if (!this.newInspection.inspectorId) {
+                    this.showAlert('Please select inspector', 'warning');
+                    return;
+                }
+
+                // Create inspection record in database
+                const inspectionData = {
+                    ID: this.generateUUID(), // Generate a proper UUID
+                    equipment_ID: this.newInspection.equipmentId,
+                    inspector_ID: this.newInspection.inspectorId,
                     inspectionDate: this.newInspection.inspectionDate,
-                    completionDate: this.newInspection.completionDate || null,
-                    status: this.newInspection.status,
-                    findings: this.newInspection.findings,
-                    safetyIssues: this.newInspection.safetyIssues,
-                    notes: this.newInspection.notes
+                    completionDate: this.newInspection.completionDate || this.newInspection.inspectionDate,
+                    status: this.newInspection.status || 'Pending',
+                    findings: this.newInspection.findings || '',
+                    safetyIssues: this.newInspection.safetyIssues || '',
+                    notes: this.newInspection.notes || ''
                 };
-                
-                const response = await axios.post(`${this.apiUrl}/reports/generate`, payload);
-                
+
+                // POST to Inspection entity to create it
+                const createResponse = await axios.post(`${this.apiUrl}/Inspection`, inspectionData);
+                const createdInspectionId = createResponse.data.ID;
+
                 this.showAlert('Inspection created successfully!', 'success');
                 this.resetInspectionForm();
                 this.currentPage = 'inspections';
                 await this.loadInspections();
             } catch (error) {
                 console.error('Error creating inspection:', error);
-                this.showAlert('Failed to create inspection', 'danger');
+                this.showAlert('Failed to create inspection: ' + (error.response?.data?.message || error.message), 'danger');
             }
         },
         
-        // View inspection details
+        // View inspection details - FIXED UUID validation + OData key format
         async viewInspectionDetails(inspectionId) {
             try {
-                const response = await axios.get(`${this.apiUrl}/inspections/${inspectionId}`);
+                if (!this.isValidUUID(inspectionId)) {
+                    console.warn('Invalid UUID:', inspectionId);
+                    this.showAlert('Invalid inspection ID format', 'danger');
+                    return;
+                }
+                const response = await axios.get(`${this.apiUrl}/Inspection(ID='${inspectionId}')`);  
                 console.log('Inspection details:', response.data);
                 this.showAlert('Details loaded (check console)', 'info');
             } catch (error) {
@@ -167,11 +202,16 @@ const app = createApp({
             }
         },
         
-        // Delete inspection
+        // Delete inspection - FIXED UUID validation + OData key format
         async deleteInspection(inspectionId) {
+            if (!this.isValidUUID(inspectionId)) {
+                console.warn('Invalid UUID:', inspectionId);
+                this.showAlert('Invalid inspection ID format', 'danger');
+                return;
+            }
             if (confirm('Are you sure you want to delete this inspection?')) {
                 try {
-                    await axios.delete(`${this.apiUrl}/inspections/${inspectionId}`);
+                    await axios.delete(`${this.apiUrl}/Inspection(ID='${inspectionId}')`);  
                     this.showAlert('Inspection deleted', 'success');
                     await this.loadInspections();
                 } catch (error) {
@@ -213,6 +253,55 @@ const app = createApp({
                 safetyIssues: '',
                 notes: ''
             };
+        },
+        
+        // Generate UUID
+        generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        },
+        
+        // Print search results - FIXED Base64 decoding + blob creation
+        async printSearchResults() {
+            try {
+                if (this.inspections.length === 0) {
+                    this.showAlert('No inspections to print', 'warning');
+                    return;
+                }
+                
+                const inspectionIds = this.inspections.map(i => i.ID);
+                console.log('Printing ' + inspectionIds.length + ' inspections');
+                
+                const response = await axios.post(`${this.apiUrl}/printInspections`, 
+                    { inspectionIds: inspectionIds }
+                );
+                
+                // Handle Base64 response from OData
+                let pdfBase64 = response.data;
+                if (response.data.value) {
+                    pdfBase64 = response.data.value;
+                }
+                
+                // Decode Base64 to binary
+                const binaryString = atob(pdfBase64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                // Create blob and open
+                const blob = new Blob([bytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                window.open(url);
+                
+                this.showAlert('PDF opened in new window', 'success');
+            } catch (error) {
+                console.error('Error printing inspections:', error);
+                this.showAlert('Failed to print inspections', 'danger');
+            }
         }
     },
     

@@ -329,31 +329,6 @@ Features:
 
 ---
 
-### REST Controller (1 File)
-
-#### **5. InspectionController.java** 🌐
-```
-Location: srv/src/main/java/customer/final_course_sap/controller/
-Purpose: REST API endpoints
-Lines: 280
-Endpoints:
-  GET /inspections - List all (35 lines)
-  GET /inspections/{id} - Get by ID (30 lines)
-  GET /equipment - List all (30 lines)
-  GET /inspectors - List all (30 lines)
-  POST /reports/generate - Generate (45 lines)
-  GET /reports/export/{id} - Export PDF (50 lines)
-  GET /search - Advanced search (40 lines)
-Features:
-  - Cross-origin support (@CrossOrigin)
-  - Error handling (try-catch)
-  - ResponseEntity for flexible responses
-  - Proper HTTP status codes
-  - Logging
-```
-
----
-
 ### Report Generation (1 File)
 
 #### **6. PdfReportGenerator.java** 📄
@@ -510,7 +485,7 @@ Content:
 |-----------|-------|-------|--------|
 | **Documentation** | 6 | README, QUICKSTART, API_DOCS, DEV_GUIDE, SUMMARY, CHECKLIST | ✅ Complete |
 | **CDS Models** | 3 | schema.cds, Service.cds, Annotations.cds | ✅ Complete |
-| **Java Code** | 2 | Handler, Controller | ✅ Complete |
+| **Java Code** | 1 | Handler | ✅ Complete |
 | **Report Generator** | 1 | PdfReportGenerator | ✅ Complete |
 | **Sample Data** | 3 | equipment.csv, inspector.csv, inspection.csv | ✅ Complete |
 | **Configuration** | 5 | pom.xml (x2), application.yaml, package.json, .gitignore | ✅ Complete |
@@ -578,7 +553,7 @@ Content:
 
 **API Questions?**
 - See: srv/InspectionService.cds (service definition)
-- See: srv/src/main/java/.../InspectionController.java (endpoints)
+- See: srv/src/main/java/.../InspectionServiceHandler.java (business logic)
 - See: API_DOCUMENTATION.md (full reference)
 
 **Report Generation?**

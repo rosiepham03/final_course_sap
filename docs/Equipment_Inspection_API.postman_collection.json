@@ -1,275 +1,149 @@
 {
   "info": {
-    "_postman_id": "equipment-inspection-api",
-    "name": "Equipment Inspection Report API",
-    "description": "API collection for Equipment Inspection Report System",
+    "_postman_id": "inspection-service-cap-java-collection",
+    "name": "Inspection Service - SAP CAP Java",
+    "description": "Postman collection để test InspectionService (OData V4) của dự án Equipment Inspection\nBase URL: http://localhost:8080/odata/v4/InspectionService",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Equipment",
-      "item": [
-        {
-          "name": "Get All Equipment",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/equipment",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "equipment"]
-            },
-            "description": "Retrieve list of all equipment with details"
-          },
-          "response": []
-        }
-      ]
+      "name": "1. Search Inspections",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/searchInspections(params={ \"equipmentId\": \"\", \"equipmentName\": \"\", \"inspectorId\": \"\", \"status\": \"\", \"inspectionDateFrom\": \"\", \"inspectionDateTo\": \"\" })",
+          "host": ["{{baseUrl}}"],
+          "path": ["searchInspections"],
+          "query": [
+            {
+              "key": "params",
+              "value": "{ \"equipmentId\": \"\", \"equipmentName\": \"\", \"inspectorId\": \"\", \"status\": \"\", \"inspectionDateFrom\": \"2025-01-01\", \"inspectionDateTo\": \"2026-03-28\" }"
+            }
+          ]
+        },
+        "description": "Tìm kiếm inspections với nhiều filter"
+      }
     },
     {
-      "name": "Inspectors",
-      "item": [
-        {
-          "name": "Get All Inspectors",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/inspectors",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "inspectors"]
-            },
-            "description": "Retrieve list of all inspectors"
-          },
-          "response": []
-        }
-      ]
+      "name": "2. Get Inspection Details",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/getInspectionDetails(inspectionId='{{inspectionId}}')",
+          "host": ["{{baseUrl}}"],
+          "path": ["getInspectionDetails"],
+          "query": []
+        },
+        "description": "Lấy chi tiết một inspection"
+      }
     },
     {
-      "name": "Inspections",
-      "item": [
-        {
-          "name": "Get All Inspections",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/inspections",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "inspections"]
-            },
-            "description": "Retrieve list of all inspection records"
-          },
-          "response": []
+      "name": "3. Generate Report (PDF)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"inspectionId\": \"{{inspectionId}}\",\n  \"additionalComments\": \"Thiết bị hoạt động bình thường, không phát hiện vấn đề an toàn lớn.\"\n}"
         },
-        {
-          "name": "Get Inspection by ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/inspections/5f5f1111-6666-7777-8888-999999999fff",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "inspections", "5f5f1111-6666-7777-8888-999999999fff"]
-            },
-            "description": "Get specific inspection record by ID"
-          },
-          "response": []
+        "url": {
+          "raw": "{{baseUrl}}/generateReport",
+          "host": ["{{baseUrl}}"],
+          "path": ["generateReport"]
         },
-        {
-          "name": "Search - All Completed",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/search?status=Completed",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "search"],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "Completed"
-                }
-              ]
-            },
-            "description": "Search inspections filtered by status"
-          },
-          "response": []
-        },
-        {
-          "name": "Search - By Equipment",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/search?equipmentId=8f8f1234-5678-9abc-def0-123456789abc",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "search"],
-              "query": [
-                {
-                  "key": "equipmentId",
-                  "value": "8f8f1234-5678-9abc-def0-123456789abc"
-                }
-              ]
-            },
-            "description": "Search inspections for specific equipment"
-          },
-          "response": []
-        },
-        {
-          "name": "Search - By Inspector",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/search?inspectorId=1a1a1111-2222-3333-4444-555555555aaa",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "search"],
-              "query": [
-                {
-                  "key": "inspectorId",
-                  "value": "1a1a1111-2222-3333-4444-555555555aaa"
-                }
-              ]
-            },
-            "description": "Search inspections by specific inspector"
-          },
-          "response": []
-        },
-        {
-          "name": "Search - Multiple Filters",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/search?status=Completed&equipmentId=8f8f1234-5678-9abc-def0-123456789abc&inspectorId=1a1a1111-2222-3333-4444-555555555aaa",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "search"],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "Completed"
-                },
-                {
-                  "key": "equipmentId",
-                  "value": "8f8f1234-5678-9abc-def0-123456789abc"
-                },
-                {
-                  "key": "inspectorId",
-                  "value": "1a1a1111-2222-3333-4444-555555555aaa"
-                }
-              ]
-            },
-            "description": "Search with multiple filter criteria"
-          },
-          "response": []
-        }
-      ]
+        "description": "Tạo báo cáo PDF (trả về binary PDF - dùng Send and Download)"
+      }
     },
     {
-      "name": "Reports",
-      "item": [
-        {
-          "name": "Generate Report",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/reports/generate?inspectionId=5f5f1111-6666-7777-8888-999999999fff&additionalComments=Approved for production",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "reports", "generate"],
-              "query": [
-                {
-                  "key": "inspectionId",
-                  "value": "5f5f1111-6666-7777-8888-999999999fff"
-                },
-                {
-                  "key": "additionalComments",
-                  "value": "Approved for production"
-                }
-              ]
-            },
-            "description": "Generate PDF report for an inspection with additional comments"
-          },
-          "response": []
+      "name": "4. Export Report PDF",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/exportReportPdf(reportId='{{reportId}}')",
+          "host": ["{{baseUrl}}"],
+          "path": ["exportReportPdf"]
         },
-        {
-          "name": "Generate Report - No Comments",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/reports/generate?inspectionId=6g6g2222-7777-8888-9999-aaaaaaaaaagg",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "reports", "generate"],
-              "query": [
-                {
-                  "key": "inspectionId",
-                  "value": "6g6g2222-7777-8888-9999-aaaaaaaaaagg"
-                }
-              ]
-            },
-            "description": "Generate PDF report without additional comments"
-          },
-          "response": []
-        },
-        {
-          "name": "Export Report PDF",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/api/reports/export/REPORT_ID_HERE",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "reports", "export", "REPORT_ID_HERE"]
-            },
-            "description": "Download generated report as PDF. Replace REPORT_ID_HERE with actual report ID from generate response"
-          },
-          "response": []
-        }
-      ]
+        "description": "Export PDF đã tạo (trả về binary)"
+      }
     },
     {
-      "name": "System Health",
-      "item": [
-        {
-          "name": "Application Health Check",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/actuator/health",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["actuator", "health"]
-            },
-            "description": "Check application health status"
-          },
-          "response": []
+      "name": "5. Add Comment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"inspectionId\": \"{{inspectionId}}\",\n  \"commentText\": \"Cần kiểm tra lại van an toàn trong lần bảo dưỡng tới.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/addComment",
+          "host": ["{{baseUrl}}"],
+          "path": ["addComment"]
         }
-      ]
+      }
+    },
+    {
+      "name": "6. Approve Inspection",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"inspectionId\": \"{{inspectionId}}\",\n  \"additionalComments\": \"Đã kiểm tra đầy đủ\",\n  \"approvalNote\": \"Phê duyệt bởi Trưởng phòng Kỹ thuật - Ngày 28/03/2026\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/approveInspection",
+          "host": ["{{baseUrl}}"],
+          "path": ["approveInspection"]
+        }
+      }
+    },
+    {
+      "name": "CRUD - Get All Inspections",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/Inspection?$expand=equipment,inspector&$top=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["Inspection"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/odata/v4/InspectionService",
+      "type": "string"
+    },
+    {
+      "key": "inspectionId",
+      "value": "paste-inspection-uuid-here",
+      "type": "string"
+    },
+    {
+      "key": "reportId",
+      "value": "paste-report-uuid-here",
+      "type": "string"
     }
   ]
 }

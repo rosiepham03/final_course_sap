@@ -163,7 +163,7 @@ final_course_sap/
 │   ├── src/main/java/
 │   │   └── customer/final_course_sap/
 │   │       ├── handlers/       ← Business logic
-│   │       ├── controller/     ← REST APIs
+
 │   │       └── report/         ← PDF generation
 │   └── pom.xml                 ← Dependencies
 │
@@ -180,7 +180,7 @@ final_course_sap/
 | **Port 8080 in use** | Change port in `srv/src/main/resources/application.yaml` |
 | **Java version error** | Install Java 21 SDK |
 | **Node not found** | Install Node.js from nodejs.org |
-| **CORS errors** | Already handled in controller |
+| **CORS errors** | Handled by CDS OData layer |
 
 ---
 
@@ -194,7 +194,7 @@ final_course_sap/
    - Search implementation
    - Report generation logic
 
-3. **REST APIs** - `srv/src/main/java/controller/InspectionController.java`
+3. **Service APIs** - CDS OData endpoints (auto-generated from service definition)
    - All API endpoints
    - Request/response handling
 
