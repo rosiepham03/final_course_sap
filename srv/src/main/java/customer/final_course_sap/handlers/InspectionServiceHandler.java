@@ -27,10 +27,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Inspection Service Handler - SAP CAP Java
- * Xử lý tất cả custom functions và actions cho InspectionService
- */
 @Component
 @ServiceName(InspectionService_.CDS_NAME)
 public class InspectionServiceHandler implements EventHandler {
@@ -42,7 +38,6 @@ public class InspectionServiceHandler implements EventHandler {
     this.persistenceService = persistenceService;
   }
 
-  // ====================== SEARCH ======================
   @On(event = SearchInspectionsContext.CDS_NAME)
   public void handleSearchInspections(SearchInspectionsContext context) {
     String search = context.getSearch();
@@ -94,7 +89,6 @@ public class InspectionServiceHandler implements EventHandler {
             return com.sap.cds.ql.CQL.and(predicates);
           })
           .orderBy(i -> i.inspectionDate().desc());
-      // Note: limit/offset handled by frontend pagination
       List<Inspection> inspections = persistenceService.run(select).listOf(Inspection.class);
       List<InspectionSearchResult> results = inspections.stream()
           .map(this::toSearchResult)
@@ -127,7 +121,6 @@ public class InspectionServiceHandler implements EventHandler {
     return result;
   }
 
-  // ====================== GET DETAILS ======================
   @On(event = GetInspectionDetailsContext.CDS_NAME)
   public void handleGetInspectionDetails(GetInspectionDetailsContext context) {
     String inspectionId = context.getInspectionId();
@@ -189,7 +182,6 @@ public class InspectionServiceHandler implements EventHandler {
       String approvedBy = "Pending";
       String approvalDate = "Pending";
 
-      // Đảm bảo dùng đúng tên trường: inspection_ID (thường là vậy trong CAP Java)
       Optional<InspectionApproval> approvalOpt = persistenceService.run(
           Select.from(InspectionApproval_.class)
               .where(a -> a.inspection_ID().eq(inspectionId))
@@ -234,7 +226,6 @@ public class InspectionServiceHandler implements EventHandler {
           .first(InspectionReport.class)
           .orElseThrow(() -> new ServiceException("Report not found"));
 
-      // CHECK NULL TRƯỚC KHI TRẢ VỀ
       if (report.getReportPdf() == null) {
         throw new ServiceException("PDF content is missing for this report record.");
       }
@@ -294,7 +285,6 @@ public class InspectionServiceHandler implements EventHandler {
     logger.info("Printing {} inspections", inspectionIds.size());
 
     try {
-      // Fetch all inspections
       List<Inspection> inspections = new ArrayList<>();
       for (String id : inspectionIds) {
         if (id == null || id.isBlank()) {

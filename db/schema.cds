@@ -32,28 +32,22 @@ entity Inspector : cuid {
 entity Inspection : cuid, managed {
     equipment: Association to Equipment;
     inspector: Association to Inspector;
-    
     inspectionDate: Date;
     completionDate: Date;
     status: String enum { Planned; InProgress; Completed; Failed };
-    
     notes: String;
     findings: String;
     safetyIssues: String;
     nextInspectionDate: Date;
-
-    // Composition đúng cách
     inspectionReports: Composition of many InspectionReport on inspectionReports.inspection = $self;
 }
 
 entity InspectionReport : cuid, managed {
     inspection: Association to Inspection;
-    
     additionalComments: String;
-    approvedBy: Association to Inspector;   // tốt hơn là String
+    approvedBy: Association to Inspector;
     approvalDate: Date;
-    
-    reportPdf: LargeBinary;                 // thay vì LargeString
+    reportPdf: LargeBinary;
     exportedAt: Timestamp;
 }
 

@@ -24,10 +24,6 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
 
-/**
- * PDF Report Generator for Equipment Inspection Reports
- * Trả về byte array trực tiếp để tối ưu hiệu năng.
- */
 public class PdfReportGenerator {
 
         private static final Logger logger = LoggerFactory.getLogger(PdfReportGenerator.class);
@@ -302,8 +298,8 @@ public class PdfReportGenerator {
 
         public static byte[] generateMultipleInspectionsReport(
                         List<cds.gen.inspectionservice.Inspection> inspections) {
-                List<cds.gen.inspectionservice.Inspection> rows =
-                                inspections == null ? Collections.emptyList() : inspections;
+                List<cds.gen.inspectionservice.Inspection> rows = inspections == null ? Collections.emptyList()
+                                : inspections;
                 try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                         PdfWriter writer = new PdfWriter(baos);
                         PdfDocument pdfDoc = new PdfDocument(writer);

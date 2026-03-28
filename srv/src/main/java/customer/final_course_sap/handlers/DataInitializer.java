@@ -55,7 +55,6 @@ public class DataInitializer {
         logger.info("Data initialization completed successfully");
       } catch (Exception e) {
         logger.error("Error during data initialization", e);
-        // Don't throw exception - allow app to continue even if data load fails
       }
     };
   }
