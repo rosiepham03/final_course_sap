@@ -2,14 +2,11 @@
 
 ## Project Overview
 
-This is a **SAP CAP (Core Application Programming) project** built with **Java backend** and **Fiori Elements frontend** for managing equipment inspection records.
-
 **Key Features:**
 - Search inspection data by equipment, inspector, date range, and status
 - Generate professional PDF inspection reports
 - Add manual comments and approval information
 - Export reports as PDF for printing
-- Fiori List Report UI for data discovery
 
 ---
 
@@ -60,56 +57,6 @@ equipment-inspection-cap/
 
 ---
 
-## Database Schema
-
-### Equipment Table
-| Column | Type | Description |
-|--------|------|-------------|
-| ID | UUID | Primary Key |
-| name | String | Equipment name |
-| type | String | Equipment type (Hydraulic Press, CNC, etc.) |
-| location | String | Physical location |
-| serialNumber | String | Manufacturer serial number |
-| manufacturer | String | Equipment manufacturer |
-| installationDate | Date | Installation date |
-| status | String | Active / Inactive / Maintenance |
-
-### Inspector Table
-| Column | Type | Description |
-|--------|------|-------------|
-| ID | UUID | Primary Key |
-| name | String | Inspector name |
-| employeeId | String | Employee ID |
-| department | String | Department |
-| email | String | Contact email |
-| certifications | String | Professional certifications |
-
-### Inspection Table
-| Column | Type | Description |
-|--------|------|-------------|
-| ID | UUID | Primary Key |
-| equipment_ID | UUID | FK to Equipment |
-| inspector_ID | UUID | FK to Inspector |
-| inspectionDate | Date | Inspection date |
-| completionDate | Date | Completion date |
-| status | String | Planned / InProgress / Completed / Failed |
-| notes | String | Inspection notes |
-| findings | String | Detailed findings |
-| safetyIssues | String | Safety issues documented |
-| nextInspectionDate | Date | Scheduled next inspection |
-
-### InspectionReport Table
-| Column | Type | Description |
-|--------|------|-------------|
-| ID | UUID | Primary Key |
-| inspection_ID | UUID | FK to Inspection |
-| additionalComments | String | User-added comments |
-| approvedBy | String | Approval signature |
-| approvalDate | Date | Approval date |
-| reportPdf | LargeString | Base64 encoded PDF |
-
----
-
 ## Prerequisites
 
 ### System Requirements
@@ -117,7 +64,6 @@ equipment-inspection-cap/
 - **Java 21 JDK** ([Download](https://www.oracle.com/java/technologies/downloads/#java21))
 - **Maven 3.9+** ([Download](https://maven.apache.org/download.cgi))
 - **Node.js 18+** ([Download](https://nodejs.org/))
-- **Git** (optional, for version control)
 
 ### Verify Installation
 ```bash
@@ -140,7 +86,7 @@ npm -v
 
 ### Step 1: Clone/Download the Project
 ```bash
-cd d:\Github\final_course_sap
+git clone https://github.com/rosiepham03/final_course_sap.git
 ```
 
 ### Step 2: Install Node Dependencies
@@ -197,163 +143,6 @@ java -jar srv/target/final_course_sap-exec.jar
 1. Open the project in **IntelliJ IDEA** or **VS Code**
 2. Right-click `Application.java` → **Run**
 3. Application starts on **http://localhost:8080**
-
----
-
-## API Endpoints
-
-### Search & List Endpoints
-
-#### 1. **Get All Inspections**
-```http
-GET http://localhost:8080/api/inspections
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-[
-  {
-    "ID": "5f5f1111-6666-7777-8888-999999999fff",
-    "equipment_ID": "8f8f1234-5678-9abc-def0-123456789abc",
-    "inspector_ID": "1a1a1111-2222-3333-4444-555555555aaa",
-    "inspectionDate": "2025-11-15",
-    "completionDate": "2025-11-15",
-    "status": "Completed",
-    "findings": "All components within normal parameters",
-    "safetyIssues": null,
-    "notes": "Routine quarterly inspection"
-  }
-]
-```
-
----
-
-#### 2. **Get Inspection by ID**
-```http
-GET http://localhost:8080/api/inspections/{id}
-```
-
-Example:
-```http
-GET http://localhost:8080/api/inspections/5f5f1111-6666-7777-8888-999999999fff
-```
-
----
-
-#### 3. **Get All Equipment**
-```http
-GET http://localhost:8080/api/equipment
-```
-
----
-
-#### 4. **Get All Inspectors**
-```http
-GET http://localhost:8080/api/inspectors
-```
-
----
-
-#### 5. **Search Inspections (Advanced Filtering)**
-```http
-GET http://localhost:8080/api/search?equipmentId=8f8f1234-5678-9abc-def0-123456789abc&status=Completed&inspectorId=1a1a1111-2222-3333-4444-555555555aaa
-```
-
-**Query Parameters:**
-- `equipmentId` (optional): Filter by equipment UUID
-- `inspectorId` (optional): Filter by inspector UUID
-- `status` (optional): Filter by status (Planned, InProgress, Completed, Failed)
-
----
-
-### Report Generation Endpoints
-
-#### 6. **Generate Inspection Report**
-```http
-POST http://localhost:8080/api/reports/generate?inspectionId=5f5f1111-6666-7777-8888-999999999fff&additionalComments=Approved%20for%20production
-```
-
-**Query Parameters:**
-- `inspectionId` (required): UUID of the inspection
-- `additionalComments` (optional): Additional comments to include in report
-
-**Response:**
-```json
-{
-  "inspectionId": "5f5f1111-6666-7777-8888-999999999fff",
-  "message": "Report generation initiated",
-  "equipment": "Hydraulic Press A1",
-  "inspector": "John Smith",
-  "status": "Completed"
-}
-```
-
----
-
-#### 7. **Export Report as PDF**
-```http
-GET http://localhost:8080/api/reports/export/{reportId}
-```
-
-**Response:** Binary PDF file (downloads inspection_report_{reportId}.pdf)
-
----
-
-## Using the Application
-
-### Scenario 1: Search Inspections
-1. **GET** http://localhost:8080/api/equipment
-   - Retrieve equipment list
-   
-2. **GET** http://localhost:8080/api/search?status=Completed
-   - Search completed inspections
-   
-3. In UI, select an inspection record → Click "View Details"
-
----
-
-### Scenario 2: Generate and Export Report
-1. **GET** http://localhost:8080/api/inspections/{inspectionId}
-   - Retrieve inspection details
-   
-2. **POST** http://localhost:8080/api/reports/generate?inspectionId={id}&additionalComments=QA%20Approved
-   - Generate PDF report with additional comments
-   
-3. **GET** http://localhost:8080/api/reports/export/{reportId}
-   - Download generated PDF
-
----
-
-## Sample Data
-
-### Pre-loaded Equipment
-- **Hydraulic Press A1** (Location: Building A - Floor 1)
-- **CNC Machine B2** (Location: Building B - Floor 2)
-- **Welding Robot C3** (Location: Building A - Floor 3)
-- **Compressor Unit D4** (Location: Building C - Basement)
-- **Power Generator E5** (Location: Building D - Exterior)
-
-### Pre-loaded Inspectors
-- John Smith (Manufacturing Department)
-- Sarah Johnson (Quality Assurance)
-- Michael Brown (Maintenance)
-- Emily Davis (Safety)
-- Robert Wilson (Manufacturing)
-
-### Pre-loaded Inspections
-- 5 inspection records with various statuses (Completed, InProgress)
-
-**Access Data:**
-```bash
-# Open H2 Console
-http://localhost:8080/h2-console
-
-# Connection details:
-# JDBC URL: jdbc:h2:mem:testdb
-# Username: sa
-# Password: (leave blank)
-```
 
 ---
 
@@ -484,32 +273,6 @@ In [InspectionController.java](InspectionController.java):
 
 ---
 
-## Testing
-
-### Unit Test Example
-Create `InspectionServiceHandlerTest.java`:
-
-```java
-@SpringBootTest
-class InspectionServiceHandlerTest {
-    
-    @Autowired
-    private PersistenceService persistenceService;
-    
-    @Test
-    void testSearchInspections() {
-        // Test implementation
-    }
-}
-```
-
-**Run Tests:**
-```bash
-mvn test
-```
-
----
-
 ## Development Tools
 
 ### VS Code Extensions
@@ -585,5 +348,5 @@ This project is provided as-is for educational and business purposes.
 
 **Last Updated:** March 2026
 **Version:** 1.0.0
-**Maintained By:** SAP Development Team
+**Maintained By:** Rosie Pham
 
