@@ -23,6 +23,7 @@ import customer.final_course_sap.report.PdfReportGenerator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -285,7 +286,10 @@ public class InspectionServiceHandler implements EventHandler {
 
   @On(event = PrintInspectionsContext.CDS_NAME)
   public void handlePrintInspections(PrintInspectionsContext context) {
-    List<String> inspectionIds = new ArrayList<>(context.getInspectionIds());
+    Collection<String> rawIds = context.getInspectionIds();
+    List<String> inspectionIds = rawIds == null
+        ? new ArrayList<>()
+        : new ArrayList<>(rawIds);
 
     logger.info("Printing {} inspections", inspectionIds.size());
 
@@ -293,6 +297,9 @@ public class InspectionServiceHandler implements EventHandler {
       // Fetch all inspections
       List<Inspection> inspections = new ArrayList<>();
       for (String id : inspectionIds) {
+        if (id == null || id.isBlank()) {
+          continue;
+        }
         Inspection insp = persistenceService.run(
             Select.from(Inspection_.class)
                 .where(i -> i.ID().eq(id))
