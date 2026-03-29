@@ -46,7 +46,13 @@ const app = createApp({
                 show: false,
                 type: 'info',
                 message: ''
-            }
+            },
+
+            // Print / view preview (modal + HTML, like demo.html)
+            previewModalOpen: false,
+            previewModalTitle: '',
+            previewHtml: '',
+            previewMode: 'list' // 'list' | 'detail'
         };
     },
     
@@ -188,7 +194,7 @@ const app = createApp({
             }
         },
         
-        // View inspection details - FIXED UUID validation + OData key format
+        // View inspection — load details + open same print preview modal as Print
         async viewInspectionDetails(inspectionId) {
             try {
                 if (!this.isValidUUID(inspectionId)) {
@@ -196,9 +202,41 @@ const app = createApp({
                     this.showAlert('Invalid inspection ID format', 'danger');
                     return;
                 }
-                const response = await axios.get(`${this.apiUrl}/Inspection(ID=${inspectionId})`);  
-                console.log('Inspection details:', response.data);
-                this.showAlert('Details loaded (check console)', 'info');
+
+                let detail = null;
+                try {
+                    const fnUrl = `${this.apiUrl}/getInspectionDetails(inspectionId='${inspectionId}')`;
+                    const response = await axios.get(fnUrl);
+                    detail = response.data.value !== undefined ? response.data.value : response.data;
+                } catch (e1) {
+                    console.warn('getInspectionDetails failed, falling back to Inspection entity:', e1);
+                    const response = await axios.get(`${this.apiUrl}/Inspection(ID=${inspectionId})`);
+                    const row = response.data;
+                    const eqId = row.equipment_ID || row.equipmentId;
+                    const inId = row.inspector_ID || row.inspectorId;
+                    const eq = this.equipment.find((x) => x.ID === eqId);
+                    const ins = this.inspectors.find((x) => x.ID === inId);
+                    detail = {
+                        inspectionId: row.ID,
+                        equipmentName: eq ? eq.name : '',
+                        equipmentType: eq ? eq.type : '',
+                        equipmentLocation: eq ? eq.location : '',
+                        serialNumber: eq ? eq.serialNumber : '',
+                        inspectionDate: row.inspectionDate,
+                        completionDate: row.completionDate,
+                        inspectorName: ins ? ins.name : '',
+                        inspectorDepartment: ins ? ins.department : '',
+                        status: row.status,
+                        findings: row.findings,
+                        safetyIssues: row.safetyIssues,
+                        notes: row.notes
+                    };
+                }
+
+                this.previewMode = 'detail';
+                this.previewModalTitle = 'Inspection — preview';
+                this.previewHtml = this.buildDetailReportHtml(detail);
+                this.previewModalOpen = true;
             } catch (error) {
                 console.error('Error loading inspection details:', error);
                 this.showAlert('Failed to load details', 'danger');
@@ -267,44 +305,202 @@ const app = createApp({
             });
         },
         
-        // Print search results - FIXED Base64 decoding + blob creation
-        async printSearchResults() {
+        /** Open HTML print preview for current search results (same UX as demo.html modal) */
+        openListPrintPreview() {
+            if (this.inspections.length === 0) {
+                this.showAlert('No inspections to print', 'warning');
+                return;
+            }
+            this.previewMode = 'list';
+            this.previewModalTitle = 'Inspection list — print preview';
+            this.previewHtml = this.buildListReportHtml();
+            this.previewModalOpen = true;
+        },
+
+        closePreviewModal() {
+            this.previewModalOpen = false;
+            this.previewHtml = '';
+        },
+
+        printPreviewContent() {
+            this.$nextTick(() => {
+                window.print();
+            });
+        },
+
+        /** Server-side PDF for current list (optional; preview modal also has Print for browser) */
+        async downloadListPdf() {
             try {
                 if (this.inspections.length === 0) {
                     this.showAlert('No inspections to print', 'warning');
                     return;
                 }
-                
-                const inspectionIds = this.inspections.map(i => i.ID);
-                console.log('Printing ' + inspectionIds.length + ' inspections');
-                
-                const response = await axios.post(`${this.apiUrl}/printInspections`, 
-                    { inspectionIds: inspectionIds }
-                );
-                
-                // Handle Base64 response from OData
+
+                const inspectionIds = this.inspections.map((i) => i.ID);
+                const response = await axios.post(`${this.apiUrl}/printInspections`, {
+                    inspectionIds: inspectionIds
+                });
+
                 let pdfBase64 = response.data;
                 if (response.data.value) {
                     pdfBase64 = response.data.value;
                 }
-                
-                // Decode Base64 to binary
+
                 const binaryString = atob(pdfBase64);
                 const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
-                
-                // Create blob and open
+
                 const blob = new Blob([bytes], { type: 'application/pdf' });
                 const url = URL.createObjectURL(blob);
                 window.open(url);
-                
+
                 this.showAlert('PDF opened in new window', 'success');
             } catch (error) {
-                console.error('Error printing inspections:', error);
-                this.showAlert('Failed to print inspections', 'danger');
+                console.error('Error generating PDF:', error);
+                this.showAlert('Failed to generate PDF', 'danger');
             }
+        },
+
+        escapeHtml(str) {
+            if (str == null || str === '') {
+                return '';
+            }
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        },
+
+        /** Safe for v-html: escaped, newlines as <br> */
+        escapeHtmlMultiline(str) {
+            return this.escapeHtml(str || '').replace(/\n/g, '<br>');
+        },
+
+        formatDateTime() {
+            const now = new Date();
+            return now.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        },
+
+        buildListReportHtml() {
+            const rows = this.inspections
+                .map((row, idx) => {
+                    const findings = row.findings
+                        ? this.escapeHtml(row.findings.length > 80 ? row.findings.substring(0, 80) + '…' : row.findings)
+                        : '—';
+                    return `<tr>
+                        <td>${idx + 1}</td>
+                        <td>${this.escapeHtml(String(row.ID || ''))}</td>
+                        <td>${this.escapeHtml(String(row.equipmentName || '—'))}</td>
+                        <td>${this.escapeHtml(String(row.inspectorName || '—'))}</td>
+                        <td>${this.escapeHtml(String(this.formatDate(row.inspectionDate)))}</td>
+                        <td>${this.escapeHtml(String(row.status || '—'))}</td>
+                        <td>${findings}</td>
+                    </tr>`;
+                })
+                .join('');
+
+            return `
+                <div class="preview-report-header">
+                    <div class="preview-report-title">Inspection list report</div>
+                    <div class="preview-report-meta">Generated: ${this.escapeHtml(this.formatDateTime())}</div>
+                </div>
+                <div class="preview-report-summary">
+                    <strong>Records:</strong> ${this.inspections.length} · <strong>Source:</strong> Equipment Inspection System (preview before print)
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="preview-data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>ID</th>
+                                <th>Equipment</th>
+                                <th>Inspector</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Findings</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <div class="preview-footer-note">Preview — use Print in the dialog header, or download PDF for server-generated file.</div>
+            `;
+        },
+
+        buildDetailReportHtml(d) {
+            const id = this.escapeHtml(d.inspectionId || d.ID || '');
+            const dateStr = this.escapeHtml(this.formatDate(d.inspectionDate));
+            const compStr = d.completionDate
+                ? this.escapeHtml(this.formatDate(d.completionDate))
+                : '—';
+            const findings = d.findings ? this.escapeHtmlMultiline(d.findings) : '—';
+            const safety = d.safetyIssues ? this.escapeHtmlMultiline(d.safetyIssues) : '—';
+            const notes = d.notes ? this.escapeHtmlMultiline(d.notes) : '—';
+            return `
+                <div class="preview-report-header">
+                    <div class="preview-report-title">Inspection report</div>
+                    <div class="preview-report-meta">Generated: ${this.escapeHtml(this.formatDateTime())}</div>
+                </div>
+                <div class="preview-report-summary">
+                    <strong>Inspection ID:</strong> ${id} · <strong>Status:</strong> ${this.escapeHtml(String(d.status || '—'))}
+                </div>
+                <dl class="preview-detail-grid">
+                    <div class="preview-detail-item">
+                        <dt>Equipment</dt>
+                        <dd>${this.escapeHtml(String(d.equipmentName || '—'))}</dd>
+                    </div>
+                    <div class="preview-detail-item">
+                        <dt>Type</dt>
+                        <dd>${this.escapeHtml(String(d.equipmentType || '—'))}</dd>
+                    </div>
+                    <div class="preview-detail-item">
+                        <dt>Location</dt>
+                        <dd>${this.escapeHtml(String(d.equipmentLocation || '—'))}</dd>
+                    </div>
+                    <div class="preview-detail-item">
+                        <dt>Serial</dt>
+                        <dd>${this.escapeHtml(String(d.serialNumber || '—'))}</dd>
+                    </div>
+                    <div class="preview-detail-item">
+                        <dt>Inspector</dt>
+                        <dd>${this.escapeHtml(String(d.inspectorName || '—'))}</dd>
+                    </div>
+                    <div class="preview-detail-item">
+                        <dt>Department</dt>
+                        <dd>${this.escapeHtml(String(d.inspectorDepartment || '—'))}</dd>
+                    </div>
+                    <div class="preview-detail-item">
+                        <dt>Inspection date</dt>
+                        <dd>${dateStr}</dd>
+                    </div>
+                    <div class="preview-detail-item">
+                        <dt>Completion date</dt>
+                        <dd>${compStr}</dd>
+                    </div>
+                </dl>
+                <div class="mb-3">
+                    <div class="preview-field-label">Findings</div>
+                    <div class="preview-block-text">${findings}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="preview-field-label">Safety issues</div>
+                    <div class="preview-block-text">${safety}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="preview-field-label">Notes</div>
+                    <div class="preview-block-text">${notes}</div>
+                </div>
+                <div class="preview-footer-note">Use Print in the dialog header to print this inspection.</div>
+            `;
         }
     },
     

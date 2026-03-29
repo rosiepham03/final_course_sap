@@ -610,16 +610,235 @@ body {
     }
 }
 
+/* Print / view preview modal (same idea as app/demo.html) */
+.modal-overlay.print-preview-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.2s, opacity 0.2s;
+    padding: 16px;
+}
+
+.modal-overlay.print-preview-overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.report-modal {
+    background: #fff;
+    width: 92%;
+    max-width: 1000px;
+    max-height: 88vh;
+    border-radius: 32px;
+    box-shadow: 0 25px 40px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fioriModalIn 0.25s ease-out;
+}
+
+@keyframes fioriModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.print-preview-overlay .modal-header {
+    padding: 18px 24px;
+    background: #0f2b3d;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.print-preview-overlay .modal-header h3 {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.print-preview-overlay .close-modal {
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    color: #fff;
+    opacity: 0.85;
+}
+
+.print-preview-overlay .close-modal:hover {
+    opacity: 1;
+}
+
+.report-content {
+    padding: 24px 28px 28px;
+    overflow-y: auto;
+    background: #fff;
+    flex: 1;
+    min-height: 0;
+}
+
+#printRoot.report-template {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 20px;
+    background: #fff;
+}
+
+.preview-report-header {
+    border-bottom: 2px solid var(--sap-teal);
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.preview-report-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--sap-teal-dark);
+}
+
+.preview-report-meta {
+    color: #5c6f87;
+    font-size: 0.9rem;
+}
+
+.preview-report-summary {
+    background: #f1f9fc;
+    padding: 14px 18px;
+    border-radius: 18px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: #1f3a4b;
+}
+
+.preview-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.preview-data-table th {
+    background: #eef2fa;
+    padding: 10px 8px;
+    border: 1px solid #dce5ec;
+    text-align: left;
+    font-weight: 600;
+}
+
+.preview-data-table td {
+    border: 1px solid #e6edf3;
+    padding: 8px;
+    vertical-align: top;
+}
+
+.preview-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px 20px;
+    margin-bottom: 20px;
+}
+
+.preview-detail-item dt {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sap-muted);
+    margin-bottom: 4px;
+}
+
+.preview-detail-item dd {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #0f2b3d;
+}
+
+.preview-footer-note {
+    margin-top: 20px;
+    font-size: 0.7rem;
+    text-align: right;
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 12px;
+    color: #4b6b84;
+}
+
+.preview-block-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.preview-field-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sap-muted);
+    margin-bottom: 6px;
+}
+
 /* Print */
 @media print {
-    .app-header,
-    .btn,
-    .btn-close,
-    .navbar-toggler {
+    #app > header.app-header,
+    #app > .container-fluid,
+    #app > .alert-container {
         display: none !important;
     }
 
     .sap-app {
+        padding: 0;
+    }
+
+    .print-preview-overlay {
+        position: static !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        padding: 0 !important;
+        height: auto !important;
+    }
+
+    .print-preview-overlay .report-modal {
+        max-height: none !important;
+        width: 100% !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .print-preview-overlay .no-print {
+        display: none !important;
+    }
+
+    .report-content {
+        overflow: visible !important;
+        padding: 12px 0 !important;
+    }
+
+    #printRoot.report-template {
+        border: none;
         padding: 0;
     }
 
