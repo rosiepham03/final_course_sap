@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SAP Fiori-like | Module Tra cứu & Báo cáo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #e9f0f5;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            padding: 28px 24px;
+            color: #1e2a3a;
+        }
+
+        /* SAP style card container */
+        .sap-app {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* header thanh công cụ */
+        .app-header {
+            background: linear-gradient(135deg, #0a6e7c 0%, #0a5c68 100%);
+            border-radius: 20px;
+            padding: 18px 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .title-section h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            letter-spacing: -0.3px;
+            color: white;
+            margin-bottom: 4px;
+        }
+        .title-section p {
+            color: #d9f0f2;
+            font-size: 0.85rem;
+        }
+        .sap-badge {
+            background: rgba(255,255,240,0.2);
+            backdrop-filter: blur(4px);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* card chính */
+        .card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.05);
+            margin-bottom: 32px;
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 28px 8px 28px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .card-header h2 {
+            font-size: 1.45rem;
+            font-weight: 600;
+            color: #0f2b3d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-header h2 i {
+            font-size: 1.6rem;
+            font-weight: 400;
+        }
+
+        /* form truy vấn */
+        .query-form {
+            padding: 24px 28px 28px 28px;
+        }
+        .form-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+        .input-group {
+            flex: 1;
+            min-width: 220px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #4a627a;
+            margin-bottom: 6px;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 0.95rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 18px;
+            background: #fefefe;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #0a6e7c;
+            box-shadow: 0 0 0 3px rgba(10,110,124,0.2);
+        }
+        .search-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .btn {
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #f1f5f9;
+            color: #1e2a3a;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #0a6e7c;
+            color: white;
+            box-shadow: 0 2px 6px rgba(10,110,124,0.3);
+        }
+        .btn-primary:hover {
+            background: #0b8596;
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            border: 1px solid #cbd5e1;
+            background: white;
+        }
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #0a6e7c;
+        }
+        /* bảng kết quả */
+        .result-section {
+            padding: 0 28px 28px 28px;
+        }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+            border-top: 1px solid #eef2f6;
+            padding-top: 20px;
+        }
+        .record-count {
+            background: #eef2ff;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 20px;
+            border: 1px solid #ecf3f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th {
+            background: #f8fafd;
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #1f3a4b;
+            border-bottom: 1px solid #e2edf2;
+        }
+        td {
+            padding: 12px 12px;
+            border-bottom: 1px solid #f0f4f9;
+            color: #1f2f3e;
+        }
+        tr:hover td {
+            background-color: #fafcff;
+        }
+        .empty-row td {
+            text-align: center;
+            padding: 40px;
+            color: #7c8b9c;
+            font-style: italic;
+        }
+
+        /* preview báo cáo theo mẫu (popup style modal) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.2s, opacity 0.2s;
+        }
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .report-modal {
+            background: white;
+            width: 85%;
+            max-width: 1000px;
+            max-height: 85vh;
+            border-radius: 32px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeSlideUp 0.25s ease-out;
+        }
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-header {
+            padding: 20px 28px;
+            background: #0f2b3d;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-size: 1.4rem;
+            font-weight: 500;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: white;
+            opacity: 0.8;
+        }
+        .report-content {
+            padding: 28px;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+        .report-template {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 20px;
+            background: #ffffff;
+        }
+        .report-header {
+            border-bottom: 2px solid #0a6e7c;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .report-title {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #0a5c68;
+        }
+        .report-date {
+            color: #5c6f87;
+        }
+        .report-summary {
+            background: #f1f9fc;
+            padding: 14px 18px;
+            border-radius: 18px;
+            margin-bottom: 24px;
+        }
+        .data-table-report {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        .data-table-report th {
+            background: #eef2fa;
+            padding: 10px 8px;
+            border: 1px solid #dce5ec;
+        }
+        .data-table-report td {
+            border: 1px solid #e6edf3;
+            padding: 8px;
+        }
+        .footer-note {
+            margin-top: 24px;
+            font-size: 0.7rem;
+            text-align: right;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 12px;
+            color: #4b6b84;
+        }
+        .btn-report {
+            background: #2c7a4d;
+            color: white;
+            margin-left: auto;
+        }
+        .btn-report:hover {
+            background: #236b42;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        @media (max-width: 680px) {
+            body { padding: 16px; }
+            .card-header { flex-direction: column; align-items: start; }
+        }
+    </style>
+</head>
+<body>
+<div class="sap-app">
+    <!-- Header giả lập SAP Integrated Module -->
+    <div class="app-header">
+        <div class="title-section">
+            <h1>📊 SAP Query & Report Engine</h1>
+            <p>Module tích hợp xử lý sự kiện truy vấn · Xuất báo cáo theo mẫu (custom template)</p>
+        </div>
+        <div class="sap-badge">
+            🔌 SAP S/4HANA Ready | Fiori UX
+        </div>
+    </div>
+
+    <!-- Card: Form truy vấn dữ liệu -->
+    <div class="card">
+        <div class="card-header">
+            <h2>🔍 1. Điều kiện truy vấn</h2>
+            <span style="font-size: 0.75rem; color:#4a627a;">Nhập thông tin tìm kiếm dữ liệu</span>
+        </div>
+        <div class="query-form">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>🏷️ Loại dữ liệu / Module</label>
+                    <select id="dataType">
+                        <option value="sales">Đơn hàng bán hàng (Sales Order)</option>
+                        <option value="material">Vật tư / Nguyên liệu (Material)</option>
+                        <option value="customer">Khách hàng (Customer Data)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>🔎 Từ khóa tìm kiếm</label>
+                    <input type="text" id="searchKeyword" placeholder="Mã, tên hoặc ID... (VD: ORD-1001, KH-001)" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>📅 Ngày (từ - đến)  (tùy chọn)</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="date" id="dateFrom" style="flex:1">
+                        <input type="date" id="dateTo" style="flex:1">
+                    </div>
+                </div>
+            </div>
+            <div class="search-actions">
+                <button class="btn btn-primary" id="searchBtn">🔎 Xử lý truy vấn & Tìm kiếm</button>
+                <button class="btn btn-outline" id="resetBtn">⟳ Đặt lại</button>
+                <button class="btn btn-outline" id="previewReportBtn" style="background:#ecfdf5; border-color:#2c7a4d;">📄 Xuất báo cáo mẫu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Kết quả dạng Report / bảng tạm -->
+    <div class="card">
+        <div class="card-header">
+            <h2>📋 2. Kết quả truy vấn (dữ liệu thô)</h2>
+            <div class="record-count" id="recordCountBadge">0 bản ghi</div>
+        </div>
+        <div class="result-section">
+            <div class="table-wrapper">
+                <table id="resultTable">
+                    <thead id="tableHeader">
+                        <tr>
+                            <th>ID</th>
+                            <th>Mã đối tượng</th>
+                            <th>Tên / Mô tả</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                            <th>Giá trị (VND)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr class="empty-row"><td colspan="6">📭 Chưa có dữ liệu. Hãy thực hiện truy vấn.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal báo cáo mẫu (theo mẫu của họ) -->
+<div id="reportModal" class="modal-overlay">
+    <div class="report-modal">
+        <div class="modal-header">
+            <h3>📄 BÁO CÁO THEO MẪU (SAP CUSTOM REPORT)</h3>
+            <button class="close-modal" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="report-content" id="reportContentContainer">
+            <!-- Nội dung báo cáo động theo mẫu sẽ được render ở đây -->
+            <div class="report-template" id="dynamicReportTemplate">
+                <!-- JS fill -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- DỮ LIỆU MÔ PHỎNG SAP BACKEND (in-memory dataset) ----------
+    // 3 loại dữ liệu: sales, material, customer
+    const mockDataset = {
+        sales: [
+            { id: "SO-1001", code: "ORD-1001", name: "Đơn hàng thiết bị điện tử", date: "2025-02-10", status: "Hoàn thành", amount: 12500000 },
+            { id: "SO-1002", code: "ORD-1002", name: "Bộ linh kiện công nghiệp", date: "2025-02-15", status: "Đang xử lý", amount: 8700000 },
+            { id: "SO-1003", code: "ORD-1003", name: "Dịch vụ tư vấn SAP", date: "2025-03-01", status: "Đã duyệt", amount: 35000000 },
+            { id: "SO-1004", code: "ORD-1004", name: "Phần mềm quản lý", date: "2025-02-28", status: "Hủy", amount: 0 },
+            { id: "SO-1005", code: "ORD-1005", name: "Thiết bị mạng", date: "2025-03-10", status: "Hoàn thành", amount: 5600000 }
+        ],
+        material: [
+            { id: "MT-001", code: "MAT-AL2024", name: "Nhôm tấm cao cấp", date: "2025-01-05", status: "Còn hàng", amount: 2300000 },
+            { id: "MT-002", code: "MAT-ST304", name: "Thép không gỉ 304", date: "2025-02-12", status: "Sắp hết", amount: 5400000 },
+            { id: "MT-003", code: "MAT-PP01", name: "Hạt nhựa nguyên sinh", date: "2025-02-20", status: "Còn hàng", amount: 1280000 },
+            { id: "MT-004", code: "MAT-CU99", name: "Đồng tấm dẫn điện", date: "2025-03-02", status: "Ngừng cấp", amount: 0 }
+        ],
+        customer: [
+            { id: "CUST-101", code: "KH-VIN001", name: "Công ty TNHH VINACOM", date: "2024-12-01", status: "Hoạt động", amount: 0 },
+            { id: "CUST-102", code: "KH-FPT002", name: "Tập đoàn FPT", date: "2025-01-20", status: "VIP", amount: 0 },
+            { id: "CUST-103", code: "KH-SAMS003", name: "Samsung Electronics VN", date: "2025-02-14", status: "Hoạt động", amount: 0 },
+            { id: "CUST-104", code: "KH-ABC", name: "Công ty ABC Logistics", date: "2025-03-05", status: "Chờ kích hoạt", amount: 0 }
+        ]
+    };
+
+    // state lưu kết quả tìm kiếm hiện tại
+    let currentResults = [];      // mảng các object kết quả
+    let currentDataType = "sales";
+    let currentSearchKeyword = "";
+    let currentDateFrom = "";
+    let currentDateTo = "";
+
+    // DOM elements
+    const dataTypeSelect = document.getElementById('dataType');
+    const searchKeywordInput = document.getElementById('searchKeyword');
+    const dateFromInput = document.getElementById('dateFrom');
+    const dateToInput = document.getElementById('dateTo');
+    const searchBtn = document.getElementById('searchBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const previewReportBtn = document.getElementById('previewReportBtn');
+    const tableBody = document.getElementById('tableBody');
+    const tableHeader = document.getElementById('tableHeader');
+    const recordCountBadge = document.getElementById('recordCountBadge');
+    const modal = document.getElementById('reportModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const reportContentContainer = document.getElementById('reportContentContainer');
+
+    // Helper: render bảng kết quả dựa trên currentResults
+    function renderResultTable() {
+        if (!currentResults.length) {
+            tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">📭 Không tìm thấy dữ liệu phù hợp với điều kiện truy vấn.</td></tr>';
+            recordCountBadge.innerText = `0 bản ghi`;
+            return;
+        }
+        recordCountBadge.innerText = `${currentResults.length} bản ghi`;
+        let html = '';
+        currentResults.forEach(item => {
+            const amountFormatted = (item.amount || 0).toLocaleString('vi-VN') + ' ₫';
+            html += `<tr>
+                        <td>${escapeHtml(item.id)}</td>
+                        <td>${escapeHtml(item.code)}</td>
+                        <td>${escapeHtml(item.name)}</td>
+                        <td>${escapeHtml(item.date || '—')}</td>
+                        <td><span style="background:#eef2ff; padding:2px 10px; border-radius:30px;">${escapeHtml(item.status)}</span></td>
+                        <td style="text-align:right">${amountFormatted}</td>
+                     </tr>`;
+        });
+        tableBody.innerHTML = html;
+    }
+
+    // Hàm tìm kiếm (xử lý sự kiện truy vấn)
+    function executeQuery() {
+        // lấy giá trị từ form
+        const dataType = dataTypeSelect.value; // 'sales','material','customer'
+        const keyword = searchKeywordInput.value.trim().toLowerCase();
+        const dateFrom = dateFromInput.value;
+        const dateTo = dateToInput.value;
+
+        currentDataType = dataType;
+        currentSearchKeyword = keyword;
+        currentDateFrom = dateFrom;
+        currentDateTo = dateTo;
+
+        let sourceData = [];
+        if (dataType === 'sales') sourceData = [...mockDataset.sales];
+        else if (dataType === 'material') sourceData = [...mockDataset.material];
+        else sourceData = [...mockDataset.customer];
+
+        // Lọc theo từ khóa (tìm trong id, code, name)
+        let filtered = sourceData;
+        if (keyword !== "") {
+            filtered = filtered.filter(item => 
+                item.id.toLowerCase().includes(keyword) || 
+                item.code.toLowerCase().includes(keyword) || 
+                item.name.toLowerCase().includes(keyword)
+            );
+        }
+
+        // Lọc theo ngày (nếu có)
+        if (dateFrom) {
+            filtered = filtered.filter(item => item.date && item.date >= dateFrom);
+        }
+        if (dateTo) {
+            filtered = filtered.filter(item => item.date && item.date <= dateTo);
+        }
+
+        currentResults = filtered;
+        renderResultTable();
+    }
+
+    // reset toàn bộ form và kết quả
+    function resetQuery() {
+        dataTypeSelect.value = 'sales';
+        searchKeywordInput.value = '';
+        dateFromInput.value = '';
+        dateToInput.value = '';
+        currentResults = [];
+        renderResultTable();
+        // reset trạng thái
+        currentDataType = 'sales';
+        currentSearchKeyword = '';
+        currentDateFrom = '';
+        currentDateTo = '';
+    }
+
+    // Xuất báo cáo theo mẫu (dựa vào currentResults và loại dữ liệu)
+    function generateReportByTemplate() {
+        // nếu chưa có dữ liệu, thông báo và khuyến khích tìm kiếm trước
+        if (!currentResults.length) {
+            alert("⚠️ Không có dữ liệu để xuất báo cáo. Vui lòng thực hiện truy vấn trước!");
+            return false;
+        }
+
+        // Lấy tên loại dữ liệu hiển thị
+        let typeLabel = "";
+        if (currentDataType === 'sales') typeLabel = "BÁO CÁO ĐƠN HÀNG BÁN HÀNG";
+        else if (currentDataType === 'material') typeLabel = "BÁO CÁO TỒN KHO VẬT TƯ";
+        else typeLabel = "BÁO CÁO DANH SÁCH KHÁCH HÀNG";
+
+        const now = new Date();
+        const formattedDate = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()} ${now.getHours()}:${now.getMinutes()}`;
+        // tính tổng giá trị (nếu có amount)
+        let totalAmount = 0;
+        currentResults.forEach(r => { if(r.amount) totalAmount += r.amount; });
+        const totalFormatted = totalAmount.toLocaleString('vi-VN') + ' ₫';
+
+        // Xây dựng HTML báo cáo theo mẫu chuyên nghiệp (mẫu của họ)
+        let rowsHtml = '';
+        currentResults.forEach((item, idx) => {
+            const amountVal = (item.amount !== undefined) ? item.amount.toLocaleString('vi-VN') + ' ₫' : '—';
+            rowsHtml += `<tr>
+                            <td style="padding:8px; border:1px solid #ddd;">${idx+1}</td>
+                            <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(item.id)}</td>
+                            <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(item.code)}</td>
+                            <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(item.name)}</td>
+                            <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(item.date || '—')}</td>
+                            <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(item.status)}</td>
+                            <td style="padding:8px; border:1px solid #ddd; text-align:right;">${amountVal}</td>
+                         </tr>`;
+        });
+
+        const reportHtml = `
+            <div class="report-template" style="font-family:'Segoe UI',sans-serif;">
+                <div class="report-header" style="display:flex; justify-content:space-between; border-bottom:3px solid #0a6e7c;">
+                    <div class="report-title" style="font-size:1.8rem; font-weight:bold; color:#0a5c68;">📊 ${typeLabel}</div>
+                    <div class="report-date" style="color:#4b6a8a;">Ngày tạo: ${formattedDate}</div>
+                </div>
+                <div class="report-summary" style="background:#f1f7fc; border-radius:20px; padding:15px; margin:20px 0;">
+                    <div><strong>🔎 Điều kiện truy vấn:</strong> Loại = ${currentDataType.toUpperCase()} | Từ khóa: "${currentSearchKeyword || 'không giới hạn'}" | Khoảng ngày: ${currentDateFrom || 'dd/mm/yyyy'} → ${currentDateTo || 'dd/mm/yyyy'}</div>
+                    <div><strong>📈 Tổng số bản ghi:</strong> ${currentResults.length} | <strong>Tổng giá trị (VND):</strong> ${totalFormatted}</div>
+                    <div><strong>🏢 Hệ thống SAP:</strong> Báo cáo được xuất từ module tích hợp - dữ liệu thời gian thực.</div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="data-table-report" style="width:100%; border-collapse:collapse; margin-top:8px;">
+                        <thead>
+                            <tr style="background:#e2eaf5;">
+                                <th style="border:1px solid #cbdbe0; padding:10px;">STT</th>
+                                <th style="border:1px solid #cbdbe0; padding:10px;">ID</th>
+                                <th style="border:1px solid #cbdbe0; padding:10px;">Mã đối tượng</th>
+                                <th style="border:1px solid #cbdbe0; padding:10px;">Tên / Mô tả</th>
+                                <th style="border:1px solid #cbdbe0; padding:10px;">Ngày tạo</th>
+                                <th style="border:1px solid #cbdbe0; padding:10px;">Trạng thái</th>
+                                <th style="border:1px solid #cbdbe0; padding:10px;">Giá trị (VND)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="footer-note" style="margin-top:28px; font-size:0.7rem; text-align:right; color:#2c6e6e; border-top:1px dashed #b9d0db; padding-top:12px;">
+                    📌 Báo cáo được tạo tự động từ SAP Integration Module | Mẫu báo cáo chuẩn doanh nghiệp | Người dùng: SAP_QUERY_VIETNAM
+                </div>
+            </div>
+        `;
+        return reportHtml;
+    }
+
+    function showReportModal() {
+        const reportHtmlContent = generateReportByTemplate();
+        if (!reportHtmlContent) return; // nếu không có dữ liệu đã alert
+        // Đặt nội dung vào modal
+        reportContentContainer.innerHTML = reportHtmlContent;
+        modal.classList.add('active');
+    }
+
+    function closeModal() {
+        modal.classList.remove('active');
+    }
+
+    // tiện ích escape html
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    // xử lý sự kiện
+    searchBtn.addEventListener('click', () => {
+        executeQuery();
+    });
+    resetBtn.addEventListener('click', () => {
+        resetQuery();
+    });
+    previewReportBtn.addEventListener('click', () => {
+        // nếu chưa có dữ liệu nhưng có thể muốn xuất báo cáo dựa trên currentResults
+        // nếu currentResults rỗng, khuyến khích tìm kiếm trước
+        if (currentResults.length === 0) {
+            alert("📌 Chưa có kết quả truy vấn. Hãy nhập thông tin và bấm 'Xử lý truy vấn & Tìm kiếm' trước khi xuất báo cáo mẫu.");
+            return;
+        }
+        showReportModal();
+    });
+    closeModalBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // mặc định khi load: hiển thị toàn bộ dữ liệu mặc định (sales ban đầu)
+    (function init() {
+        // load mặc định danh sách sales toàn bộ để demo trực quan
+        currentResults = [...mockDataset.sales];
+        currentDataType = 'sales';
+        renderResultTable();
+        recordCountBadge.innerText = `${currentResults.length} bản ghi`;
+    })();
+
+</script>
+</body>
+</html>

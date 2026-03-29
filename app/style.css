@@ -1,14 +1,19 @@
-/* Equipment Inspection System - Styles */
+/* Equipment Inspection — SAP Fiori-like (aligned with demo.html) */
 
 :root {
-    --primary-color: #0d6efd;
-    --success-color: #198754;
-    --danger-color: #dc3545;
-    --warning-color: #ffc107;
-    --info-color: #0dcaf0;
-    --light-bg: #f8f9fa;
-    --border-color: #dee2e6;
-    --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    --sap-teal: #0a6e7c;
+    --sap-teal-dark: #0a5c68;
+    --sap-teal-light: #0b8596;
+    --sap-bg: #e9f0f5;
+    --sap-text: #1e2a3a;
+    --sap-muted: #4a627a;
+    --sap-card-border: #e2e8f0;
+    --sap-success: #2c7a4d;
+    --sap-warning: #c27803;
+    --sap-danger: #c53030;
+    --sap-info: #0a6e7c;
+    --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.05);
+    --shadow-header: 0 8px 18px rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -18,263 +23,459 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f6f7;
-    color: #333;
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+    background: var(--sap-bg);
+    color: var(--sap-text);
+    min-height: 100vh;
 }
 
-/* Navigation */
-.navbar {
-    box-shadow: var(--shadow);
-    border-bottom: 3px solid #0056b3;
-}
-
-.navbar-brand {
-    font-size: 1.3rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-.navbar-brand i {
-    margin-right: 8px;
-}
-
-/* Main Container */
-.container-fluid {
-    padding: 20px;
+/* App shell */
+.sap-app {
     max-width: 1400px;
     margin: 0 auto;
+    padding: 28px 24px 40px;
 }
 
-/* Page Headers */
-h1 {
-    color: #1a3a52;
-    font-weight: 700;
-    margin-bottom: 30px;
-    border-left: 4px solid var(--primary-color);
-    padding-left: 15px;
+/* Top bar — same language as demo.html */
+.app-header {
+    background: linear-gradient(135deg, var(--sap-teal) 0%, var(--sap-teal-dark) 100%);
+    border-radius: 20px;
+    padding: 18px 28px 20px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-header);
 }
 
-h1 i {
+.app-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.title-section h1 {
+    font-size: 1.65rem;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.title-section h1 i {
     margin-right: 10px;
-    color: var(--primary-color);
+    opacity: 0.95;
 }
 
-/* Dashboard - Statistics Cards */
+.title-section p {
+    color: #d9f0f2;
+    font-size: 0.85rem;
+}
+
+.sap-badge {
+    background: rgba(255, 255, 240, 0.2);
+    backdrop-filter: blur(4px);
+    padding: 6px 16px;
+    border-radius: 40px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    align-self: center;
+}
+
+/* Nav pills */
+.fiori-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fiori-nav .nav-link {
+    color: #d9f0f2;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+    border: 1px solid transparent;
+}
+
+.fiori-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.fiori-nav .nav-link.active {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.navbar-toggler {
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 6px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-toggler-icon {
+    filter: invert(1);
+}
+
+.collapse.fiori-collapse {
+    width: 100%;
+}
+
+/* Main area */
+.container-fluid {
+    padding: 0;
+    max-width: 100%;
+}
+
+/* Page title */
+.fiori-page-title {
+    font-size: 1.45rem;
+    font-weight: 600;
+    color: #0f2b3d;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fiori-page-title i {
+    font-size: 1.5rem;
+    color: var(--sap-teal);
+    font-weight: 400;
+}
+
+/* Dashboard statistics */
 .stat-card {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #0a58ca 100%);
-    color: white;
-    border-radius: 10px;
-    padding: 25px;
+    background: linear-gradient(145deg, var(--sap-teal) 0%, #085a66 100%);
+    color: #fff;
+    border-radius: 22px;
+    padding: 22px 20px;
     text-align: center;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px rgba(10, 110, 124, 0.2);
 }
 
 .stat-value {
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-bottom: 10px;
+    font-size: 2.35rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
 }
 
 .stat-label {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     opacity: 0.95;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.6px;
 }
 
-/* Cards */
+/* Cards — Fiori shell */
 .card {
+    background: #fff;
     border: 0;
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    transition: box-shadow 0.3s ease;
-    margin-bottom: 20px;
+    border-radius: 28px;
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+    margin-bottom: 24px;
+    transition: box-shadow 0.2s ease;
 }
 
 .card:hover {
-    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.07);
 }
 
 .card-header {
-    border-radius: 10px 10px 0 0 !important;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--sap-card-border);
     font-weight: 600;
-    padding: 15px 20px;
+    font-size: 1.05rem;
+    color: #0f2b3d;
+    background: #fafcfd !important;
 }
 
 .card-header i {
     margin-right: 8px;
+    color: var(--sap-teal);
 }
 
-/* Equipment & Inspector Cards */
+.card-header.bg-info,
+.card-header.bg-success {
+    background: #fafcfd !important;
+    color: #0f2b3d !important;
+}
+
+.card-body {
+    padding: 22px 24px;
+}
+
+/* Equipment & inspector tiles */
 .equipment-card,
 .inspector-card {
     height: 100%;
-    border-left: 4px solid var(--primary-color);
-    transition: border-color 0.3s ease;
+    border-radius: 22px;
+    border-left: 4px solid var(--sap-teal);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .equipment-card:hover,
 .inspector-card:hover {
-    border-left-color: var(--success-color);
+    border-left-color: var(--sap-success);
 }
 
-/* Inspection List */
+.equipment-card .card-title,
+.inspector-card .card-title {
+    color: #0f2b3d;
+    font-size: 1.1rem;
+}
+
+/* Inspection list */
 .inspection-list {
     max-height: 400px;
     overflow-y: auto;
 }
 
 .inspection-item {
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-color);
-    cursor: pointer;
+    padding: 14px 0;
+    border-bottom: 1px solid #eef2f6;
     transition: background-color 0.2s ease;
+    border-radius: 12px;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-left: -8px;
+    margin-right: -8px;
 }
 
 .inspection-item:hover {
-    background-color: var(--light-bg);
-    padding-left: 8px;
+    background-color: #fafcff;
 }
 
 .inspection-item:last-child {
     border-bottom: none;
 }
 
-/* Status Indicators */
+/* Status rows */
 .status-item {
     padding: 10px 0;
     display: flex;
     align-items: center;
     gap: 10px;
+    color: #1f3a4b;
 }
 
 .status-item i {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
+    color: var(--sap-teal);
 }
 
 /* Tables */
+.table-responsive {
+    border-radius: 20px;
+    border: 1px solid #ecf3f9;
+    overflow: hidden;
+}
+
 .table {
     margin: 0;
+    font-size: 0.88rem;
 }
 
 .table thead {
-    background-color: #2c3e50;
+    background: #f8fafd;
 }
 
 .table thead th {
     border: 0;
-    color: white;
+    border-bottom: 1px solid #e2edf2;
+    color: #1f3a4b;
     font-weight: 600;
-    padding: 15px;
+    padding: 14px 12px;
 }
 
 .table tbody tr {
-    transition: background-color 0.2s ease;
+    transition: background-color 0.15s ease;
 }
 
 .table tbody tr:hover {
-    background-color: var(--light-bg);
+    background-color: #fafcff;
 }
 
-.table td {
+.table tbody td {
+    border-bottom: 1px solid #f0f4f9;
     vertical-align: middle;
-    padding: 12px 15px;
+    padding: 12px;
+    color: #1f2f3e;
 }
 
-/* Badges */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: transparent;
+}
+
+/* Badges — pill */
 .badge {
-    padding: 6px 12px;
-    border-radius: 20px;
+    padding: 5px 12px;
+    border-radius: 30px;
     font-weight: 500;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+}
+
+.badge.bg-success {
+    background: #e8f5ec !important;
+    color: var(--sap-success) !important;
+}
+
+.badge.bg-warning {
+    background: #fff8e6 !important;
+    color: #9a6700 !important;
+}
+
+.badge.bg-secondary {
+    background: #e8eef4 !important;
+    color: #475569 !important;
 }
 
 /* Forms */
+.form-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--sap-muted);
+    margin-bottom: 6px;
+}
+
 .form-control,
 .form-select {
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    padding: 10px 12px;
+    border-radius: 18px;
+    border: 1px solid #cbd5e1;
+    padding: 11px 14px;
     font-size: 0.95rem;
+    background: #fefefe;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-control:focus,
 .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    border-color: var(--sap-teal);
+    box-shadow: 0 0 0 3px rgba(10, 110, 124, 0.2);
+    outline: none;
 }
 
-.form-label {
+.input-group-text {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    font-size: 0.8rem;
     font-weight: 600;
-    margin-bottom: 8px;
-    color: #2c3e50;
+    color: var(--sap-muted);
 }
 
-/* Buttons */
+.input-group .form-control {
+    border-color: #cbd5e1;
+}
+
+/* Buttons — pill primary */
 .btn {
-    border-radius: 6px;
-    font-weight: 500;
-    padding: 8px 16px;
-    transition: all 0.3s ease;
-    border: 0;
+    border-radius: 40px;
+    font-weight: 600;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    transition: 0.2s;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
+    background: var(--sap-teal);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(10, 110, 124, 0.3);
 }
 
 .btn-primary:hover {
-    background-color: #0b5ed7;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    background: var(--sap-teal-light);
+    color: #fff;
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
-    background-color: #6c757d;
+    background: #f1f5f9;
+    color: #1e2a3a;
+    border: 1px solid #cbd5e1;
 }
 
 .btn-secondary:hover {
-    background-color: #5c636a;
+    background: #e8eef4;
+    color: #1e2a3a;
 }
 
 .btn-success {
-    background-color: var(--success-color);
+    background: var(--sap-success);
+    color: #fff;
+}
+
+.btn-success:hover {
+    background: #236b42;
+    color: #fff;
 }
 
 .btn-info {
-    background-color: var(--info-color);
+    background: #e8f4f6;
+    color: var(--sap-teal);
+    border: 1px solid #b8d9de;
+}
+
+.btn-info:hover {
+    background: #d4ebef;
+    color: var(--sap-teal-dark);
 }
 
 .btn-danger {
-    background-color: var(--danger-color);
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.btn-danger:hover {
+    background: #fecaca;
+    color: #991b1b;
 }
 
 .btn-sm {
-    padding: 5px 10px;
-    font-size: 0.85rem;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    border-radius: 40px;
 }
 
 /* Alerts */
 .alert-container {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
+    top: 24px;
+    right: 24px;
+    z-index: 1050;
     max-width: 400px;
-    animation: slideIn 0.3s ease-out;
+    animation: slideIn 0.25s ease-out;
 }
 
 @keyframes slideIn {
     from {
-        transform: translateX(400px);
+        transform: translateX(24px);
         opacity: 0;
     }
     to {
@@ -284,70 +485,48 @@ h1 i {
 }
 
 .alert {
-    border-radius: 6px;
-    box-shadow: var(--shadow);
-    animation: slideInOut 5s ease-in-out;
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft);
+    border: none;
 }
 
-@keyframes slideInOut {
-    0%, 100% { opacity: 1; }
-    90%, 100% { opacity: 0; }
+.alert .btn-close {
+    padding: 0.85rem;
 }
 
 .alert-info {
-    background-color: #e7f3ff;
-    border-left: 4px solid var(--info-color);
-    color: #004085;
+    background: #e8f4f6;
+    border-left: 4px solid var(--sap-teal);
+    color: #0f2b3d;
 }
 
 .alert-success {
-    background-color: #d4edda;
-    border-left: 4px solid var(--success-color);
-    color: #155724;
+    background: #ecfdf5;
+    border-left: 4px solid var(--sap-success);
+    color: #14532d;
 }
 
 .alert-danger {
-    background-color: #f8d7da;
-    border-left: 4px solid var(--danger-color);
-    color: #721c24;
+    background: #fef2f2;
+    border-left: 4px solid var(--sap-danger);
+    color: #7f1d1d;
 }
 
 .alert-warning {
-    background-color: #fff3cd;
-    border-left: 4px solid var(--warning-color);
-    color: #856404;
+    background: #fffbeb;
+    border-left: 4px solid var(--sap-warning);
+    color: #78350f;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    h1 {
-        font-size: 1.5rem;
-    }
-    
-    .stat-card {
-        margin-bottom: 15px;
-    }
-    
-    .stat-value {
-        font-size: 2rem;
-    }
-    
-    .table-responsive {
-        font-size: 0.9rem;
-    }
-    
-    .table td {
-        padding: 8px;
-    }
-    
-    .alert-container {
-        max-width: 90%;
-        left: 5%;
-        right: 5%;
-    }
+/* Page transitions */
+.dashboard-page,
+.inspections-page,
+.equipment-page,
+.inspectors-page,
+.new-inspection-page {
+    animation: fadeIn 0.25s ease-in;
 }
 
-/* Animations */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -357,34 +536,25 @@ h1 i {
     }
 }
 
-.dashboard-page,
-.inspections-page,
-.equipment-page,
-.inspectors-page,
-.new-inspection-page {
-    animation: fadeIn 0.3s ease-in;
-}
-
-/* Scrollbar Styling */
+/* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--light-bg);
+    background: #eef2f6;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #ccc;
+    background: #c5d0dc;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
+    background: #a8b8c8;
 }
 
-/* Utilities */
 .text-truncate {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -395,9 +565,9 @@ h1 i {
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 3px solid var(--light-bg);
+    border: 3px solid #eef2f6;
     border-radius: 50%;
-    border-top-color: var(--primary-color);
+    border-top-color: var(--sap-teal);
     animation: spin 1s ease-in-out infinite;
 }
 
@@ -407,16 +577,54 @@ h1 i {
     }
 }
 
-/* Print Styles */
-@media print {
-    .navbar,
-    .btn,
-    .btn-close {
-        display: none;
+/* Responsive */
+@media (max-width: 991px) {
+    .fiori-nav {
+        flex-direction: column;
+        align-items: stretch;
+        padding-top: 12px;
     }
-    
+
+    .fiori-nav .nav-link {
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .sap-app {
+        padding: 16px;
+    }
+
+    .fiori-page-title {
+        font-size: 1.25rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+    }
+
+    .alert-container {
+        max-width: calc(100% - 32px);
+        left: 16px;
+        right: 16px;
+    }
+}
+
+/* Print */
+@media print {
+    .app-header,
+    .btn,
+    .btn-close,
+    .navbar-toggler {
+        display: none !important;
+    }
+
+    .sap-app {
+        padding: 0;
+    }
+
     .card {
         box-shadow: none;
-        border: 1px solid var(--border-color);
+        border: 1px solid #e2e8f0;
     }
 }

@@ -2,61 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Equipment Inspection Report System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SAP Fiori-like | Equipment Inspection</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="style.css?v=3" rel="stylesheet">
+    <link href="style.css?v=4" rel="stylesheet">
 </head>
 <body>
-    <div id="app">
-        <!-- Navigation -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="#">
-                    <i class="bi bi-clipboard-check"></i> Equipment Inspection System
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <div id="app" class="sap-app">
+        <header class="app-header">
+            <div class="app-header-top">
+                <div class="title-section">
+                    <h1><i class="bi bi-clipboard-check"></i> Equipment Inspection System</h1>
+                    <p>Integrated inspection reporting module · Fiori-style UI</p>
+                </div>
+                <div class="sap-badge">SAP S/4HANA OData · Fiori UX</div>
+            </div>
+            <nav class="navbar navbar-expand-lg p-0">
+                <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#fioriNav" aria-controls="fioriNav" aria-expanded="false" aria-label="Menu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'dashboard'">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'inspections'">Inspections</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'equipment'">Equipment</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'inspectors'">Inspectors</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" @click.prevent="currentPage = 'newInspection'">New Inspection</a></li>
-                    </ul>
+                <div class="collapse navbar-collapse fiori-collapse" id="fioriNav">
+                    <div class="fiori-nav w-100">
+                        <a class="nav-link" :class="{ active: currentPage === 'dashboard' }" href="#" @click.prevent="currentPage = 'dashboard'">Dashboard</a>
+                        <a class="nav-link" :class="{ active: currentPage === 'inspections' }" href="#" @click.prevent="currentPage = 'inspections'">Inspections</a>
+                        <a class="nav-link" :class="{ active: currentPage === 'equipment' }" href="#" @click.prevent="currentPage = 'equipment'">Equipment</a>
+                        <a class="nav-link" :class="{ active: currentPage === 'inspectors' }" href="#" @click.prevent="currentPage = 'inspectors'">Inspectors</a>
+                        <a class="nav-link" :class="{ active: currentPage === 'newInspection' }" href="#" @click.prevent="currentPage = 'newInspection'">New Inspection</a>
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        </header>
 
-        <!-- Main Content -->
-        <div class="container-fluid mt-4">
-            <!-- Dashboard Page -->
+        <div class="container-fluid">
+            <!-- Dashboard -->
             <div v-if="currentPage === 'dashboard'" class="dashboard-page">
-                <h1 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard</h1>
-                
-                <div class="row mb-4">
-                    <div class="col-md-3">
+                <h2 class="fiori-page-title"><i class="bi bi-speedometer2"></i> Dashboard</h2>
+
+                <div class="row mb-4 g-3">
+                    <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="stat-value">{{ stats.totalInspections }}</div>
                             <div class="stat-label">Total Inspections</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="stat-value">{{ stats.totalEquipment }}</div>
                             <div class="stat-label">Equipment Registered</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="stat-value">{{ stats.totalInspectors }}</div>
                             <div class="stat-label">Inspectors</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="stat-value">{{ stats.pendingReports }}</div>
                             <div class="stat-label">Pending Reports</div>
@@ -64,10 +66,10 @@
                     </div>
                 </div>
 
-                <div class="row">
+                <div class="row g-4">
                     <div class="col-md-6">
                         <div class="card">
-                            <div class="card-header bg-info text-white">
+                            <div class="card-header">
                                 <i class="bi bi-graph-up"></i> Recent Inspections
                             </div>
                             <div class="card-body">
@@ -83,14 +85,14 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div v-else class="text-muted text-center py-3">No recent inspections</div>
+                                <div v-else class="text-muted text-center py-4">No recent inspections</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="card">
-                            <div class="card-header bg-success text-white">
+                            <div class="card-header">
                                 <i class="bi bi-tools"></i> System Status
                             </div>
                             <div class="card-body">
@@ -103,7 +105,7 @@
                                 <div class="status-item">
                                     <i class="bi bi-gear text-success"></i> Services: <strong>Running</strong>
                                 </div>
-                                <hr>
+                                <hr class="my-3 opacity-25">
                                 <small class="text-muted">Last updated: {{ new Date().toLocaleString() }}</small>
                             </div>
                         </div>
@@ -111,17 +113,19 @@
                 </div>
             </div>
 
-            <!-- Inspections Page -->
+            <!-- Inspections -->
             <div v-if="currentPage === 'inspections'" class="inspections-page">
-                <h1 class="mb-4"><i class="bi bi-list-check"></i> Inspections</h1>
-                
+                <h2 class="fiori-page-title"><i class="bi bi-list-check"></i> Inspections</h2>
+
                 <div class="card mb-4">
                     <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-3">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-lg-3 col-md-6">
+                                <label class="form-label">Equipment</label>
                                 <input v-model="filters.equipmentName" type="text" class="form-control" placeholder="Search equipment...">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-lg-3 col-md-6">
+                                <label class="form-label">Inspector</label>
                                 <select v-model="filters.inspectorId" class="form-select">
                                     <option value="">All Inspectors</option>
                                     <option v-for="insp in inspectors" :key="insp.ID" :value="insp.ID">
@@ -129,15 +133,17 @@
                                     </option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <div class="input-group">
+                            <div class="col-lg-4 col-md-12">
+                                <label class="form-label">Date range</label>
+                                <div class="input-group flex-nowrap">
                                     <span class="input-group-text">From</span>
                                     <input v-model="filters.dateFrom" type="date" class="form-control">
                                     <span class="input-group-text">To</span>
                                     <input v-model="filters.dateTo" type="date" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-lg-2 col-md-6">
+                                <label class="form-label">Status</label>
                                 <select v-model="filters.status" class="form-select">
                                     <option value="">All Status</option>
                                     <option value="PENDING">Pending</option>
@@ -145,13 +151,11 @@
                                     <option value="COMPLETED">Completed</option>
                                 </select>
                             </div>
-                            <div class="col-md-1 d-grid">
-                                <button class="btn btn-primary" @click="searchInspections">
-                                    <i class="bi bi-search"></i>
+                            <div class="col-lg-auto col-md-6 d-flex gap-2 flex-wrap">
+                                <button class="btn btn-primary" type="button" @click="searchInspections">
+                                    <i class="bi bi-search"></i> Search
                                 </button>
-                            </div>
-                            <div class="col-md-1 d-grid">
-                                <button class="btn btn-success" @click="printSearchResults" :disabled="inspections.length === 0" title="Print results">
+                                <button class="btn btn-success" type="button" @click="printSearchResults" :disabled="inspections.length === 0" title="Print results">
                                     <i class="bi bi-printer"></i>
                                 </button>
                             </div>
@@ -160,8 +164,8 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
+                    <table class="table table-hover">
+                        <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Equipment</th>
@@ -184,10 +188,10 @@
                                 </td>
                                 <td>{{ inspection.findings ? inspection.findings.substring(0, 30) + '...' : '-' }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-info" @click="viewInspectionDetails(inspection.ID)" title="View">
+                                    <button class="btn btn-sm btn-info" type="button" @click="viewInspectionDetails(inspection.ID)" title="View">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger" @click="deleteInspection(inspection.ID)" title="Delete">
+                                    <button class="btn btn-sm btn-danger" type="button" @click="deleteInspection(inspection.ID)" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </td>
@@ -195,24 +199,24 @@
                         </tbody>
                     </table>
                 </div>
-                <div v-if="inspections.length === 0" class="text-muted text-center py-3">No inspections found</div>
+                <div v-if="inspections.length === 0" class="text-muted text-center py-4">No inspections found</div>
             </div>
 
-            <!-- Equipment Page -->
+            <!-- Equipment -->
             <div v-if="currentPage === 'equipment'" class="equipment-page">
-                <h1 class="mb-4"><i class="bi bi-tools"></i> Equipment</h1>
-                
-                <div class="row">
-                    <div v-for="eq in equipment" :key="eq.ID" class="col-md-6 col-lg-4 mb-3">
+                <h2 class="fiori-page-title"><i class="bi bi-tools"></i> Equipment</h2>
+
+                <div class="row g-3">
+                    <div v-for="eq in equipment" :key="eq.ID" class="col-md-6 col-lg-4">
                         <div class="card equipment-card">
                             <div class="card-body">
                                 <h5 class="card-title">{{ eq.name }}</h5>
-                                <p class="card-text">
+                                <p class="card-text mb-0">
                                     <small>
                                         <strong>Type:</strong> {{ eq.type }}<br>
                                         <strong>Location:</strong> {{ eq.location }}<br>
                                         <strong>Serial:</strong> {{ eq.serialNumber }}<br>
-                                        <strong>Status:</strong> 
+                                        <strong>Status:</strong>
                                         <span v-if="eq.status === 'ACTIVE'" class="badge bg-success">Active</span>
                                         <span v-else class="badge bg-secondary">{{ eq.status }}</span>
                                     </small>
@@ -226,16 +230,16 @@
                 </div>
             </div>
 
-            <!-- Inspectors Page -->
+            <!-- Inspectors -->
             <div v-if="currentPage === 'inspectors'" class="inspectors-page">
-                <h1 class="mb-4"><i class="bi bi-person-check"></i> Inspectors</h1>
-                
-                <div class="row">
-                    <div v-for="inspector in inspectors" :key="inspector.ID" class="col-md-4 mb-3">
+                <h2 class="fiori-page-title"><i class="bi bi-person-check"></i> Inspectors</h2>
+
+                <div class="row g-3">
+                    <div v-for="inspector in inspectors" :key="inspector.ID" class="col-md-4">
                         <div class="card inspector-card">
                             <div class="card-body">
                                 <h5 class="card-title">{{ inspector.name }}</h5>
-                                <p class="card-text">
+                                <p class="card-text mb-0">
                                     <small>
                                         <strong>Employee ID:</strong> {{ inspector.employeeId }}<br>
                                         <strong>Department:</strong> {{ inspector.department }}<br>
@@ -252,14 +256,14 @@
                 </div>
             </div>
 
-            <!-- New Inspection Page -->
+            <!-- New inspection -->
             <div v-if="currentPage === 'newInspection'" class="new-inspection-page">
-                <h1 class="mb-4"><i class="bi bi-plus-circle"></i> New Inspection</h1>
-                
+                <h2 class="fiori-page-title"><i class="bi bi-plus-circle"></i> New Inspection</h2>
+
                 <div class="card">
                     <div class="card-body">
                         <form @submit.prevent="submitInspection">
-                            <div class="row mb-3">
+                            <div class="row mb-3 g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Equipment *</label>
                                     <select v-model="newInspection.equipmentId" class="form-select" required>
@@ -276,7 +280,7 @@
                                 </div>
                             </div>
 
-                            <div class="row mb-3">
+                            <div class="row mb-3 g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Inspection Date *</label>
                                     <input v-model="newInspection.inspectionDate" type="date" class="form-control" required>
@@ -323,19 +327,17 @@
             </div>
         </div>
 
-        <!-- Alert Messages -->
         <div v-if="alert.show" class="alert-container" :class="'alert-' + alert.type">
             <div class="alert" :class="'alert-' + alert.type">
                 {{ alert.message }}
-                <button type="button" class="btn-close" @click="alert.show = false"></button>
+                <button type="button" class="btn-close" @click="alert.show = false" aria-label="Close"></button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="app.js?v=17"></script>
+    <script src="app.js?v=19"></script>
 </body>
 </html>
